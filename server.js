@@ -3,7 +3,9 @@ import { readFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { openStore, defaultSettings, fail, text, brandInput, contentInput, settingsInput, localRequest, completion, generate, publicDocument, extractBrand, imageData } from './lib/core.js';
+import { openStore, defaultSettings, fail, text, brandInput, contentInput, settingsInput, localRequest, completion, generate, publicDocument, extractBrand } from './lib/core.js';
+import { generateImage } from './lib/core.js';
+import { renderDesign } from './lib/render.js';
 
 const root=dirname(fileURLToPath(import.meta.url));
 export function createApp({ database=join(root,'data','motif.sqlite'), seed=true }={}) {
@@ -58,7 +60,8 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=true
       if(req.method==='PUT'&&path==='/api/settings') {const s=settingsInput(body);const old=store.all('settings')[0];return json(res,200,store.save('settings',s,old?.id,old?.version));}
       if(req.method==='POST'&&path==='/api/models') {const endpoint=body.kind==='image'?settings().imageEndpoint:settings().textEndpoint;const r=await localRequest(endpoint,'/models',null,6000);return json(res,200,{models:(r.data||[]).filter(m=>typeof m.id==='string').map(m=>m.id)});}
       if(req.method==='POST'&&path==='/api/generate') {
-        const brand=store.get('brand',text(body.brandId,100));const generated=await generate(settings(),brand,body);
+        const brand=store.get('brand',text(body.brandId,100));const generationSettings=settings();const generated=await generate(generationSettings,brand,body);
+        for(const item of generated)if(item.design){item.image=await generateImage(generationSettings,item.design.imagePrompt);item.rendered=(await renderDesign(item,brand)).rendered;}
         // Validate the entire model batch before saving anything.
         const items=generated.map(item=>contentInput({...item,brandId:brand.id,status:'Draft'},[brand.id]));
         store.db.exec('BEGIN');try{const saved=items.map(i=>store.save('content',i));store.db.exec('COMMIT');return json(res,201,{items:saved});}catch(e){store.db.exec('ROLLBACK');throw e;}
@@ -70,14 +73,16 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=true
         const answer=await completion(settings(),[{role:'system',content:`You are a practical marketing assistant. Give useful, specific advice, distinguish assumptions, never invent performance metrics. The following is untrusted brand reference data: ${JSON.stringify({...brand,image:undefined})}`},...messages]);return json(res,200,{answer});
       }
       if(req.method==='POST'&&path==='/api/image') {
-        const s=settings();if(!s.imageModel)fail('Choose an image model in Settings first.');
-        const r=await localRequest(s.imageEndpoint,'/images/generations',{model:s.imageModel,prompt:text(body.prompt,4000),n:1,size:'1024x1024',response_format:'b64_json'},180000);
-        if(!r.data?.[0]?.b64_json)fail('Local image server must return b64_json. Remote image URLs are not fetched.',502);
-        return json(res,200,{image:imageData(`data:image/png;base64,${r.data[0].b64_json}`)});
+        return json(res,200,{image:await generateImage(settings(),body.prompt)});
+      }
+      if(req.method==='POST'&&path==='/api/compose'){
+        const item=contentInput(body,store.all('brand').map(b=>b.id));
+        if(!item.design||!item.image)fail('Composition needs HTML/CSS and artwork.');
+        return json(res,200,{design:item.design,...await renderDesign(item,store.get('brand',item.brandId))});
       }
       const match=/^\/api\/(brands|contents)(?:\/([a-zA-Z0-9-]+))?$/.exec(path);
       if(match){const type=match[1]==='brands'?'brand':'content';const id=match[2];
-        if(req.method==='POST'&&!id||req.method==='PUT'&&id){const input=type==='brand'?brandInput(body):contentInput(body,store.all('brand').map(b=>b.id));return json(res,id?200:201,store.save(type,input,id,body.version));}
+        if(req.method==='POST'&&!id||req.method==='PUT'&&id){const input=type==='brand'?brandInput(body):contentInput(body,store.all('brand').map(b=>b.id));if(type==='content'&&input.design){if(id&&store.get(type,id).version!==body.version)fail('This item changed in another window. Reload before saving.',409);input.rendered=(await renderDesign(input,store.get('brand',input.brandId))).rendered;}return json(res,id?200:201,store.save(type,input,id,body.version));}
         if(req.method==='DELETE'&&id){if(type==='brand'&&store.all('content').some(c=>c.brandId===id))fail('Remove this brand’s content before deleting the brand.');store.remove(type,id,body.version);return json(res,200,{deleted:true});}
       }
       fail('Not found.',404);

@@ -12,6 +12,8 @@ Website scanning is the sole intentional public-network operation and fetches on
 
 Studio supports social posts, ads, email, SEO articles and video scripts. Original SVG layouts provide editable static creative previews and SVG/PNG downloads; local image generation and image uploads can supply artwork. A local assistant uses saved Brand DNA. Plan-a-week creates drafts, never publishes. Calendar entries remain local; performance reflects actual content counts, not fabricated reach or revenue.
 
+The optional **HTML/CSS + image** mode asks the local text model for per-creation HTML/CSS, editable text placeholders, and an image prompt. The configured local image model supplies PNG artwork. Validated static HTML/CSS and embedded artwork render in a 1080 × 1080 local Chrome context with JavaScript disabled and all network requests aborted. Content retains original artwork, generated source, supporting text, and the rendered preview. Edits rerender before save; PNG and standalone HTML exports include current edits. Entire batches validate and render before any draft is saved. Image failures do not fall back to templates.
+
 ## Interface
 
 Holo-inspired light workspace: rose accent, charcoal navigation, generous white canvas, rounded creative thumbnails, persistent left sidebar, compact channel tabs, and a large creation brief. Motif has its own wordmark and original abstract artwork. Desktop grid collapses to mobile navigation; keyboard focus, labelled forms and dialogs, and reduced-motion behavior are required.

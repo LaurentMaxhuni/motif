@@ -3,8 +3,8 @@
 2026-10-31, Windows, Node 22.23.4, installed Chrome 156.
 
 - Syntax: `npm run check`.
-- Backend: `npm test` (12 tests).
-- Chrome: `node scripts/smoke.mjs` (13 workflow checks, in-memory isolated database).
+- Backend: `npm test` (19 tests, including hybrid model contracts and HTML/CSS boundaries).
+- Chrome: `node scripts/smoke.mjs` (19 workflow checks, in-memory isolated database).
 - Live app: `GET http://127.0.0.1:3333/api/state` returned one example brand and four example creations.
 - Live website scan: `POST /api/scan` with `https://tryholo.ai` returned Holo AI, canonical website, and explicit metadata-review provenance. Did not save this scan to user data.
 - Desktop and 390 px mobile screenshots visually reviewed. PNG creative export visually reviewed at 1080 × 1080.
@@ -18,3 +18,5 @@ REA public captures:
 Saved evidence is a selected projection (parameters, browser lifecycle, limitations, and accessibility text), not a complete exported REA ledger. Screenshots and raw DOM were inspected during the session but are not embedded in that JSON.
 
 Local AI contracts were exercised over HTTP against a fixture server. No actual user model or image engine was started. Model quality, throughput, hardware capacity, and engine-specific support remain unverified. No social account was connected and no content was published.
+
+Hybrid verification calls text and image fixture endpoints in sequence, checks 1080 × 1080 PNG output, edits and rerenders a composition, persists source and pixels, and verifies image-server failure leaves no partial drafts. Security checks reject scripts, embedded documents, external image sources, inline handlers/styles, CSS imports/URLs (including escaped URLs), dynamic assets, and stylesheet-closing injection. Browser smoke additionally exports HTML and PNG, edits CSS and headline, verifies reload persistence, and checks the composition editor at mobile width. Fixture artwork is a deterministic test pattern, not output from a real image model.

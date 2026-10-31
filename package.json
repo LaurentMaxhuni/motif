@@ -4,8 +4,7 @@
   "private": true,
   "type": "module",
   "description": "A fully local brand and marketing studio",
-  "scripts": { "start": "node server.js", "dev": "node --watch server.js", "test": "node --test test/*.test.js", "check": "node --check server.js && node --check lib/core.js && node --check public/app.js" },
+  "scripts": { "start": "node server.js", "dev": "node --watch server.js", "test": "node --test test/*.test.js", "check": "node --check server.js && node --check lib/core.js && node --check lib/design.js && node --check lib/render.js && node --check public/app.js" },
   "engines": { "node": ">=22.13" },
-  "dependencies": { "cheerio": "1.1.2" },
-  "devDependencies": { "playwright": "1.56.1" }
+  "dependencies": { "cheerio": "1.1.2", "css-tree": "3.1.0", "playwright": "1.56.1" }
 }

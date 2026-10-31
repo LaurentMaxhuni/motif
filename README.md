@@ -21,6 +21,7 @@ For a fresh checkout, first run `npm ci`. Internet is needed to install dependen
 - Creative studio for social posts, ads, emails, SEO articles, and video scripts.
 - Offline design templates, clearly distinguished from local AI generation.
 - Configurable loopback text and image endpoints, model detection, and brand-aware chat.
+- **HTML/CSS + image mode:** local LLM designs a fresh composition and artwork prompt; local image model generates the artwork; an isolated local Chrome renderer combines them into a 1080 × 1080 creative.
 - Creative editor, four layouts, photo upload, original vector artwork, PNG/SVG and full-copy Markdown export.
 - Draft, Approved, Scheduled, and Ready states, local content calendar, and five-day draft planning.
 - Workspace activity, CSV export, JSON backup, and additive backup import.
@@ -39,6 +40,18 @@ Open **Settings** (sidebar on desktop, gear icon in the top bar on mobile). Ente
 | llama.cpp / Unsloth | Your server’s loopback port plus `/v1` |
 
 Text uses `/chat/completions`; generation requests JSON-object output. Choose a model/server supporting that contract. See [Ollama’s official compatibility documentation](https://docs.ollama.com/api/openai-compatibility). Settings do not start a model or download weights.
+
+### Generate with both HTML/CSS and images
+
+1. Configure **both** text and image endpoints and model IDs in Settings.
+2. In Creative studio select **HTML/CSS + image**, enter a brief, and start with **1 variation**.
+3. Motif asks the text model for copy, HTML, CSS, and an artwork prompt. It sends that prompt to the image model, embeds the returned artwork, and renders the result locally. Larger batches generate artwork sequentially and can take several minutes.
+4. Open the creation to edit headline, CTA, and supporting text. Expand **HTML/CSS composition & artwork prompt** to change the layout and image prompt. Click **Update preview** to render current edits, or **Save creation** to render and persist them. Editing the image prompt does not generate a new image until you click **Local AI image**.
+5. Download **PNG** for a ready-to-use creative, or **HTML** for a self-contained design with artwork embedded. Full caption/article/script text remains separately exportable. For email and SEO content the square is a promotional creative; the full copy is not squeezed into the image.
+
+This mode uses model-authored compositions, not the four SVG template layouts. Text stays separate from artwork. Current artwork generation is text-to-image; it does not send uploaded product photos to an image-editing model or guarantee exact product reproduction.
+
+Rendering requires installed Chrome/Chromium/Edge. Windows Chrome and Edge, common Linux Chromium paths, and macOS Chrome are detected. Set `CHROME_PATH` if yours is elsewhere. Renderer and output documents block scripts and network access; HTML tags/attributes and CSS are validated before rendering. CSS parsing uses [CSSTree](https://github.com/csstree/csstree); local browser rendering uses [Playwright](https://playwright.dev/docs/api/class-browser).
 
 Images require an OpenAI-compatible `/images/generations` server returning PNG `b64_json`. Standard ComfyUI is not directly compatible; use an adapter or upload a locally produced image. Video output is a script, not a rendered video. No image or text model is bundled. Authenticated local endpoints are not supported in this version.
 
@@ -66,6 +79,6 @@ npm test
 node scripts/smoke.mjs
 ```
 
-Backend tests cover local AI HTTP contracts, persistence and edits, batch validation, backup import, scheduling, image validation, and network boundaries. Browser smoke uses installed Chrome on Windows, an in-memory test database, and checks creation, editing, PNG export, planning, reload persistence, brand isolation, mobile overflow, and absence of external requests. Set `CHROME_PATH` to override its executable path. Screenshots and results are written under `output/playwright/` (Git-ignored).
+Backend tests cover local AI HTTP contracts, the combined model pipeline, HTML/CSS validation, browser rendering, atomic failures, persistence and edits, backup import, scheduling, image validation, and network boundaries. Browser smoke uses installed Chrome on Windows, an in-memory test database, and checks creation, editing, template and hybrid PNG export, self-contained HTML export, CSS editing, planning, reload persistence, brand isolation, mobile overflow, and absence of external requests. Set `CHROME_PATH` to override its executable path. Screenshots and results are written under `output/playwright/` (Git-ignored). Test images and model responses are deterministic fixtures; actual model quality remains unverified.
 
 Node 22 may print an experimental warning for its built-in SQLite module. This is expected.
