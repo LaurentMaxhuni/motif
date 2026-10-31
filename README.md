@@ -54,7 +54,7 @@ Website scanning intentionally contacts the supplied public HTTP(S) page. It doe
 
 ## Product boundaries
 
-Holo’s authenticated editor, private APIs, prompts, publishing system, and analytics were not accessible. This is a working local reconstruction of its public workflow, **not verified feature parity**. REA evidence IDs, accessibility captures, and limitations are in [docs/rea-evidence.json](docs/rea-evidence.json); scope and design decisions are in [docs/design.md](docs/design.md).
+Holo’s paid editor, private APIs, prompts, publishing system, and analytics were not accessible. A user-authorized temporary-email login succeeded, but immediately reached **No Active Subscription**. Public checkout requires payment before Launch. Details and REA evidence are in [docs/authenticated-research.md](docs/authenticated-research.md). This is a working local reconstruction of its public workflow, **not verified feature parity**. Initial REA evidence IDs, accessibility captures, and limitations are in [docs/rea-evidence.json](docs/rea-evidence.json); scope and design decisions are in [docs/design.md](docs/design.md).
 
 Schedules are local reminders. Nothing is automatically published, emailed, uploaded, or purchased. Approve and export content, then use your publishing tools. Activity shows real workspace counts; no invented reach, conversions, or ad-spend metrics. Generated claims and mailing compliance details still need editorial review.
 

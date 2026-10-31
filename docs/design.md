@@ -18,4 +18,4 @@ Holo-inspired light workspace: rose accent, charcoal navigation, generous white 
 
 ## Limits
 
-No authenticated Holo account was supplied. Its private editor, model prompts, publishing integrations, billing, and analytics were not observed. This build reconstructs capabilities from public evidence; it is not a byte-identical clone. Actual social publishing, advertising spend, live metrics and generated video require external platforms or additional local engines and are not simulated.
+No subscribed Holo account was supplied. A later user-authorized temporary-email login succeeded but reached the subscription gate before onboarding. Public checkout was observed up to the payment step; no purchase was made. Its paid editor, model prompts, publishing integrations, and analytics were not observed. This build reconstructs capabilities from public evidence; it is not a byte-identical clone. Actual social publishing, advertising spend, live metrics and generated video require external platforms or additional local engines and are not simulated.

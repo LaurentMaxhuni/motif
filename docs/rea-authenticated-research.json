@@ -1,0 +1,324 @@
+[
+  {
+    "evidence_id": "ev_2c4428226fc8fce14a5fa74d0e7dc1babdf3789d4013673b311024135da839fd",
+    "operation": "capture_browser_scenario",
+    "provider": {
+      "id": "rea-playwright-browser-scenario",
+      "name": "REA Playwright browser scenario capture provider",
+      "version": "1"
+    },
+    "parameters": {
+      "start_url": {
+        "url": "https://app.tryholo.ai/login",
+        "query": []
+      },
+      "environment": {
+        "viewport": {
+          "width": 1280,
+          "height": 720,
+          "device_scale_factor": 1
+        },
+        "locale": "en-US",
+        "timezone": "UTC",
+        "color_scheme": "light",
+        "reduced_motion": "reduce",
+        "service_workers": "allow"
+      },
+      "actions": [
+        {
+          "step_id": "email",
+          "timeout_ms": 10000,
+          "action": "fill",
+          "locator": {
+            "kind": "role",
+            "role": "textbox",
+            "name": "holo@email.com"
+          },
+          "value": {
+            "source": "literal",
+            "value": "[temporary research email]"
+          }
+        },
+        {
+          "step_id": "request-code",
+          "timeout_ms": 10000,
+          "action": "click",
+          "locator": {
+            "kind": "role",
+            "role": "button",
+            "name": "Get Confirmation Code"
+          },
+          "button": "left",
+          "click_count": 1
+        },
+        {
+          "step_id": "settle",
+          "action": "wait_for_timeout",
+          "duration_ms": 2000
+        }
+      ]
+    },
+    "browser": {
+      "mode": "connect",
+      "process_ownership": "external",
+      "cleanup": "disconnected-external",
+      "product": "Chromium",
+      "version": "156.0.8078.76"
+    },
+    "steps": [
+      {
+        "step_id": "scenario_start",
+        "status": "completed",
+        "after_url": {
+          "url": "https://app.tryholo.ai/login",
+          "origin": "https://app.tryholo.ai",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "accessibility": null
+      },
+      {
+        "step_id": "email",
+        "status": "completed",
+        "after_url": {
+          "url": "https://app.tryholo.ai/login",
+          "origin": "https://app.tryholo.ai",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "accessibility": null
+      },
+      {
+        "step_id": "request-code",
+        "status": "completed",
+        "after_url": {
+          "url": "https://app.tryholo.ai/login",
+          "origin": "https://app.tryholo.ai",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "accessibility": null
+      },
+      {
+        "step_id": "settle",
+        "status": "completed",
+        "after_url": {
+          "url": "https://app.tryholo.ai/login",
+          "origin": "https://app.tryholo.ai",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "accessibility": {
+          "text": "- document:\n  - main:\n    - complementary:\n      - img \"Holo content creation preview\"\n      - img \"Holo founder testimonial preview\"\n      - img \"Holo supported languages preview\"\n      - button \"Show login carousel slide 1\"\n      - button \"Show login carousel slide 2\"\n      - button \"Show login carousel slide 3\"\n    - heading \"Login\" [level=1]\n    - textbox \"holo@email.com\" [disabled]: [temporary research email]\n    - paragraph: We just sent you a 6-digit login code. Check your inbox and paste the code below.\n    - paragraph: Please allow up to 5 minutes for the email to arrive. If not received, check your spam folder.\n    - textbox \"Login code digit 1\"\n    - textbox \"Login code digit 2\"\n    - textbox \"Login code digit 3\"\n    - textbox \"Login code digit 4\"\n    - textbox \"Login code digit 5\"\n    - textbox \"Login code digit 6\"\n    - button \"Resend code in 119s\" [disabled]\n    - text: or\n    - button \"Continue with Google\":\n      - img\n      - text: Continue with Google\n    - button \"Use email & password\"\n    - link \"Privacy policy\":\n      - /url: https://tryholo.ai/policies/privacy\n    - link \"Terms of service\":\n      - /url: https://tryholo.ai/policies/terms-of-service\n  - region \"Notifications alt+T\":\n    - list:\n      - listitem: Verification code sent to your email!\n  - alert",
+          "redactions": [
+            "Temporary research email address"
+          ]
+        }
+      }
+    ],
+    "limitations": [
+      "Artifact identity is unavailable for this observation.",
+      "Event sequence records provider receipt order; simultaneous browser causality is not inferred.",
+      "Network content is retained only when selected; Playwright response-body bytes are API results and are not guaranteed to match wire bytes.",
+      "Request bytes are limited to what Playwright exposes; not_exposed does not establish body absence or multipart file coverage.",
+      "Network content reads settle within 5 seconds each and the observer does not request bodies from unfinished responses.",
+      "Playwright scenario events do not expose request initiator stacks; receipt order does not prove causality.",
+      "Storage values are hashed only after declared-secret redaction.",
+      "CDP attachment cannot recover pre-attach events or guarantee launch-time context options.",
+      "Attached locale en-US applies to Intl formatting only; navigator.language(s) and Accept-Language remain caller-controlled. Use launch mode for matching page and request languages.",
+      "Detaching a CDP page session may clear caller-owned navigator.platform emulation. REA cannot snapshot the caller's complete user-agent/client-hint state before attachment; use launch mode to avoid mutating that external browser.",
+      "Browser host platform and architecture were not observed."
+    ],
+    "projection_note": "Selected projection; temporary research email redacted. Authentication codes, cookies, mailbox credentials, and tokens excluded."
+  },
+  {
+    "evidence_id": "ev_4011aa9169f3557df8db9e3ae626e87f0379e5054c17b94d7d8f781ea987ff33",
+    "operation": "capture_browser_scenario",
+    "provider": {
+      "id": "rea-playwright-browser-scenario",
+      "name": "REA Playwright browser scenario capture provider",
+      "version": "1"
+    },
+    "parameters": {
+      "start_url": {
+        "url": "https://app.tryholo.ai/no-subscription",
+        "query": []
+      },
+      "environment": {
+        "viewport": {
+          "width": 1920,
+          "height": 1080,
+          "device_scale_factor": 1
+        },
+        "locale": "en-US",
+        "timezone": "UTC",
+        "color_scheme": "light",
+        "reduced_motion": "reduce",
+        "service_workers": "allow"
+      },
+      "actions": [
+        {
+          "step_id": "desktop-layout",
+          "action": "wait_for_timeout",
+          "duration_ms": 1200
+        }
+      ]
+    },
+    "browser": {
+      "mode": "connect",
+      "process_ownership": "external",
+      "cleanup": "disconnected-external",
+      "product": "Chromium",
+      "version": "156.0.8078.76"
+    },
+    "steps": [
+      {
+        "step_id": "scenario_start",
+        "status": "completed",
+        "after_url": {
+          "url": "https://app.tryholo.ai/no-subscription",
+          "origin": "https://app.tryholo.ai",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "accessibility": null
+      },
+      {
+        "step_id": "desktop-layout",
+        "status": "completed",
+        "after_url": {
+          "url": "https://app.tryholo.ai/no-subscription",
+          "origin": "https://app.tryholo.ai",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "accessibility": {
+          "text": "- document:\n  - img \"Blue gradient effect\"\n  - img \"Red gradient effect\"\n  - text: Have more questions? Talk to support\n  - button \"Button\"\n  - img \"No Account Holo\"\n  - heading \"No Active Subscription\" [level=1]\n  - paragraph: \"Email you logged in: [temporary research email]\"\n  - button \"Sign out\"\n  - text: Check Subscription\n  - button \"Button\"\n  - link \"Get subscription\":\n    - /url: https://tryholo.ai/pricing\n  - paragraph: I bought a subscription, but it says \"No subscription found.\" when logging in.\n  - paragraph: \"That can mean a few things:\"\n  - paragraph\n  - list:\n    - listitem: You purchased with one email but are trying to log in with another. (This often happens when using Apple Pay or Google Pay, which might use a different email.)\n    - listitem: You may have entered a typo in your email address when purchasing.\n    - listitem: You're using a capital/small letter variation - our system recognizes the exact email format, so it must match perfectly.\n  - paragraph\n  - paragraph: 💡 Check your inbox for a confirmation email or receipt - that's always sent to the purchase email.\n  - paragraph: I haven't received a confirmation email after purchasing. Is this normal?\n  - paragraph: No - confirmation emails are sent automatically to your purchase email, and your payment provider sends a second receipt that can't land in spam.\n  - paragraph\n  - paragraph: If you didn't get either, it likely means the email was mistyped during checkout.\n  - paragraph: Can I log in with a password or another method?\n  - paragraph: Not yet - for now, you can log in only using a 6-digit email code or Google authentication. Password login will be added in a future update.\n  - paragraph: I'm receiving the 6-digit code, but it says \"No subscription found.\"\n  - paragraph: This happens because the code works with any email, but you must log in with the exact same email you used to purchase. We're already working on a fix for this issue - thanks for your patience!\n  - paragraph: I'm not sure which email I used to sign up. How can I find out?\n  - paragraph: \"We can help! Just send us:\"\n  - paragraph\n  - list:\n    - listitem: The approximate time of your purchase\n    - listitem: The last 4 digits of your card\n  - paragraph\n  - paragraph: We'll confirm which email your subscription is under.\n  - paragraph\n  - paragraph: You can also check yourself - if you didn't receive a confirmation or receipt, it likely means there was a typo in the email you entered.\n  - paragraph: I made a mistake when entering my email. Can I change it?\n  - paragraph: \"No worries - just email us at support@tryholo.ai and let us know:\"\n  - paragraph\n  - list:\n    - listitem: The incorrect email you used\n    - listitem: The correct one you'd like to update it to\n  - paragraph\n  - paragraph: We'll update it as soon as possible. It's a priority request, but please allow up to 24 hours during high-volume times.\n  - link \"Terms & Conditions\":\n    - /url: https://tryholo.ai/policies/terms-of-service\n  - link \"Privacy Policy\":\n    - /url: https://tryholo.ai/policies/privacy\n  - region \"Notifications alt+T\"\n  - alert",
+          "redactions": [
+            "Temporary research email address"
+          ]
+        }
+      }
+    ],
+    "limitations": [
+      "Artifact identity is unavailable for this observation.",
+      "Event sequence records provider receipt order; simultaneous browser causality is not inferred.",
+      "Network content is retained only when selected; Playwright response-body bytes are API results and are not guaranteed to match wire bytes.",
+      "Request bytes are limited to what Playwright exposes; not_exposed does not establish body absence or multipart file coverage.",
+      "Network content reads settle within 5 seconds each and the observer does not request bodies from unfinished responses.",
+      "Playwright scenario events do not expose request initiator stacks; receipt order does not prove causality.",
+      "Storage values are hashed only after declared-secret redaction.",
+      "CDP attachment cannot recover pre-attach events or guarantee launch-time context options.",
+      "Attached locale en-US applies to Intl formatting only; navigator.language(s) and Accept-Language remain caller-controlled. Use launch mode for matching page and request languages.",
+      "Detaching a CDP page session may clear caller-owned navigator.platform emulation. REA cannot snapshot the caller's complete user-agent/client-hint state before attachment; use launch mode to avoid mutating that external browser.",
+      "Browser host platform and architecture were not observed."
+    ],
+    "projection_note": "Selected projection; temporary research email redacted. Authentication codes, cookies, mailbox credentials, and tokens excluded."
+  },
+  {
+    "evidence_id": "ev_82ffcbb23bd8156775d0f2d3966abe3c152cca184e1e55ab6f5268b375dfeb31",
+    "operation": "capture_browser_scenario",
+    "provider": {
+      "id": "rea-playwright-browser-scenario",
+      "name": "REA Playwright browser scenario capture provider",
+      "version": "1"
+    },
+    "parameters": {
+      "start_url": {
+        "url": "https://tryholo.ai/pricing",
+        "query": []
+      },
+      "environment": {
+        "viewport": {
+          "width": 1920,
+          "height": 1080,
+          "device_scale_factor": 1
+        },
+        "locale": "en-US",
+        "timezone": "UTC",
+        "color_scheme": "light",
+        "reduced_motion": "reduce",
+        "service_workers": "block"
+      },
+      "actions": [
+        {
+          "step_id": "starter-checkout",
+          "timeout_ms": 10000,
+          "action": "click",
+          "locator": {
+            "kind": "css",
+            "selector": "#plans a[href^=\"/checkout?plan=starter\"]"
+          },
+          "button": "left",
+          "click_count": 1
+        },
+        {
+          "step_id": "checkout-layout",
+          "action": "wait_for_timeout",
+          "duration_ms": 2200
+        }
+      ]
+    },
+    "browser": {
+      "mode": "launch",
+      "process_ownership": "provider-owned",
+      "cleanup": "terminated-owned-process",
+      "product": "Chromium",
+      "version": "156.0.8078.76"
+    },
+    "steps": [
+      {
+        "step_id": "scenario_start",
+        "status": "completed",
+        "after_url": {
+          "url": "https://tryholo.ai/pricing",
+          "origin": "https://tryholo.ai",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "accessibility": null
+      },
+      {
+        "step_id": "starter-checkout",
+        "status": "completed",
+        "after_url": {
+          "url": "https://tryholo.ai/pricing",
+          "origin": "https://tryholo.ai",
+          "query_parameter_names": [],
+          "redacted": false
+        },
+        "accessibility": null
+      },
+      {
+        "step_id": "checkout-layout",
+        "status": "completed",
+        "after_url": {
+          "url": "https://tryholo.ai/checkout?plan=starter&billing=biannual",
+          "origin": "https://tryholo.ai",
+          "query_parameter_names": [
+            "plan",
+            "billing"
+          ],
+          "redacted": false
+        },
+        "accessibility": {
+          "text": "- document:\n  - alert: Checkout - Holo\n  - banner:\n    - link \"Holo home\":\n      - /url: /pricing\n      - img \"Holo\"\n    - list \"Checkout progress\":\n      - listitem:\n        - link \"Back to pricing\":\n          - /url: /pricing\n          - text: Plan\n      - listitem: Payment\n      - listitem: Launch\n    - text: Reserved\n    - timer: 14:59\n  - main:\n    - region \"Payment details\":\n      - heading \"Payment\" [level=1]\n      - iframe\n      - button \"Preparing payment…\" [disabled]\n      - paragraph:\n        - text: By choosing a payment method you agree to the\n        - link \"T&Cs\":\n          - /url: /policies/terms-of-service\n        - text: and\n        - link \"Privacy policy\":\n          - /url: /policies/privacy\n        - text: . Cancel anytime.\n    - region \"Accepted payment methods\": Trusted payments powered by Solidgate VISA AMEX P Pay Pay\n    - region \"Order summary\":\n      - heading \"Order summary\" [level=2]\n      - text: Holo Starter\n      - paragraph: $20.33/mo × 6 months\n      - text: $122.00\n      - paragraph: Due today\n      - text: $122.00\n      - textbox \"Discount code\" [disabled]\n      - button \"Applying\" [disabled]\n      - switch \"Upgrade to Scale + $28/mo 2.5× more content & all features\"\n    - region \"Customer reviews\":\n      - button \"Previous review\"\n      - button \"Next review\"\n      - paragraph: “I'm giving Holo 5 stars not because it's perfect across the board but because the team behind it is prompt in resolving issues AND they're open to input from their customers about ways to improve UX. I really feel like they care about us.”\n      - text: Priya N. Canada · 3 Aug 2026\n      - img \"Verified\"\n      - text: Verified Customer\n    - region \"What's included\": Cancel anytime Cancel in one click. 24/7 support A real human, anytime. Privacy & security Enterprise-grade protection.\n  - dialog \"Cookie Settings\":\n    - heading \"Cookie Settings\" [level=2]\n    - paragraph:\n      - text: We use cookies to enhance your experience, analyze site traffic and deliver personalized content. Read our\n      - link \"Cookie Policy\":\n        - /url: /policies/privacy\n      - text: .\n    - button \"Reject\"\n    - button \"Accept\"",
+          "redactions": [
+            "Temporary research email address"
+          ]
+        }
+      }
+    ],
+    "limitations": [
+      "Artifact identity is unavailable for this observation.",
+      "Event sequence records provider receipt order; simultaneous browser causality is not inferred.",
+      "Network content is retained only when selected; Playwright response-body bytes are API results and are not guaranteed to match wire bytes.",
+      "Request bytes are limited to what Playwright exposes; not_exposed does not establish body absence or multipart file coverage.",
+      "Network content reads settle within 5 seconds each and the observer does not request bodies from unfinished responses.",
+      "Playwright scenario events do not expose request initiator stacks; receipt order does not prove causality.",
+      "Storage values are hashed only after declared-secret redaction.",
+      "Browser host platform and architecture were not observed."
+    ],
+    "projection_note": "Selected projection; temporary research email redacted. Authentication codes, cookies, mailbox credentials, and tokens excluded."
+  }
+]
