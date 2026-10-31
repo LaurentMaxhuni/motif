@@ -1,0 +1,43 @@
+import { chromium } from 'playwright';
+import assert from 'node:assert/strict';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { createApp } from '../server.js';
+
+mkdirSync('output/playwright',{recursive:true});
+const {server,store}=createApp({database:':memory:'});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const origin=`http://127.0.0.1:${server.address().port}`;
+const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',headless:true});
+const context=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});
+const page=await context.newPage();
+const errors=[];const external=[];
+page.on('pageerror',e=>errors.push(e.message));
+page.on('request',req=>{if(!req.url().startsWith(origin)&&!req.url().startsWith('data:')&&!req.url().startsWith('blob:'))external.push(req.url());});
+try{
+  await page.goto(origin);await page.getByRole('heading',{name:'A little spark. A lot of possibility.'}).waitFor();
+  assert.equal(await page.locator('.content-card').count(),4);
+  await page.screenshot({path:'output/playwright/studio-desktop.png',fullPage:true});
+  await page.getByRole('button',{name:'Create content',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelectorAll('.content-card').length===7);
+  await page.locator('.preview-button').first().click();
+  await page.locator('[name=headline]').fill('A better everyday.');
+  await page.locator('[name=body]').fill('A saved caption with <script>literal text</script>.');
+  await page.locator('[name=status]').selectOption('Scheduled');
+  await page.locator('[name=scheduledAt]').fill('2026-11-02T10:00');
+  await page.screenshot({path:'output/playwright/editor-desktop.png',fullPage:true});
+  const png=page.waitForEvent('download');await page.getByRole('button',{name:'PNG',exact:true}).click();const file=await png;assert.ok(file.suggestedFilename().endsWith('.png'));await file.saveAs('output/playwright/creative-export.png');
+  await page.getByRole('button',{name:'Save creation',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('dialog').open);
+  await page.reload();await page.locator('.preview-button').first().click();assert.equal(await page.locator('[name=headline]').inputValue(),'A better everyday.');assert.match(await page.locator('[name=body]').inputValue(),/<script>/);await page.getByRole('button',{name:'Close dialog',exact:true}).click();
+  await page.getByRole('button',{name:'Calendar',exact:true}).click();await page.getByRole('heading',{name:'A little planning goes a long way.'}).waitFor();
+  await page.getByRole('button',{name:'Plan my week',exact:true}).click();await page.getByRole('button',{name:'Create my week',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('dialog').open);assert.equal(store.all('content').filter(c=>c.scheduledAt).length,6);
+  await page.getByRole('button',{name:'Brand DNA',exact:true}).click();await page.locator('[name=voice]').fill('Warm, direct, specific.');await page.getByRole('button',{name:'Save Brand DNA',exact:true}).click();await page.reload();await page.getByRole('button',{name:'Brand DNA',exact:true}).click();assert.equal(await page.locator('[name=voice]').inputValue(),'Warm, direct, specific.');
+  await page.getByRole('button',{name:'Settings',exact:true}).click();await page.locator('[name=textModel]').fill('local-example');await page.getByRole('button',{name:'Save settings',exact:true}).click();
+  await page.getByRole('button',{name:'Creative studio',exact:true}).click();
+  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'output/playwright/studio-mobile.png',fullPage:true});
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
+  await page.getByRole('button',{name:'Add brand',exact:true}).click();await page.locator('#new-brand-form [name=name]').fill('Another brand');await page.getByRole('button',{name:'Create brand',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('dialog').open);
+  await page.getByRole('button',{name:'Creative studio',exact:true}).click();assert.equal(await page.locator('.content-card').count(),0);
+  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+  writeFileSync('output/playwright/result.json',JSON.stringify({passed:true,checks:['template generation','editing','literal HTML escaped','schedule','PNG download','reload persistence','weekly planning','brand edit','settings','brand isolation','mobile overflow','no external requests','no browser errors'],errors,external},null,2));
+  console.log('Browser smoke passed: 13 workflow checks. Screenshots in output/playwright/.');
+}finally{await browser.close();await new Promise(r=>server.close(r));store.db.close();}
