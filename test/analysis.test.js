@@ -67,7 +67,8 @@ test('local synthesis accepts cited interpretations and retains observed evidenc
   assert.equal(result.voice, 'Clear and practical'); assert.equal(result.analysis.mode, 'local-ai');
   assert.ok(result.analysis.evidence.some(e => e.kind === 'inferred' && e.quote));
   assert.equal(invocation[0], settings); assert.equal(invocation[2], true);
-  assert.equal(invocation[4], controller.signal);
+  assert.ok(invocation[4] instanceof AbortSignal);
+  controller.abort(); assert.equal(invocation[4].aborted, true);
   assert.ok(invocation[1][1].content.length < 60000);
 });
 test('malformed or fabricated synthesis falls back atomically without losing extraction', async () => {
