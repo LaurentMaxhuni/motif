@@ -1,5 +1,17 @@
 # Verification
 
+## shadcn/ui migration — 2026-11-01
+
+- Entire frontend migrated to React/TypeScript, Tailwind, official shadcn/ui registry components, Lucide, Sonner and React Day Picker. Original custom DOM/CSS frontend removed. All routes use the same primitives, neutral theme, responsive Sidebar/Sheet, forms and dialogs.
+- `npm run check` and `npm run build`: passed. Pages load on demand; generated creative rendering remains isolated from the application UI. Windows launcher now builds before starting. Build retains an external local theme bootstrap so the initial appearance loads without inline scripts.
+- Backend: **58 passed, zero failures**. Added compiled index/JS/CSS serving, source/private-file/traversal and sourcemap rejection tests.
+- Creative browser suite: **27 checks passed**, including fully AI creation/revision/undo, saved versions, explicit artwork regeneration, failure preservation, late editor responses, save locking, full-size legacy previews, real PNG/SVG/HTML downloads, assistant success/failure/brand isolation, backup roundtrip and model settings preservation. No unexpected browser/console/CSP errors, HTTP failures or external browser requests.
+- Feature browser suite: **21 checks passed**, preserving onboarding/research review, theme persistence/system preference changes, encrypted connector boundaries, explicit fixture-only drafts, duplicate suppression, stale reviews, report isolation and mobile layouts. Added mobile Sheet focus containment/Escape/trigger restoration and calendar month/agenda checks.
+- Navigation browser suite: **6 checks passed**, covering reset of mounted onboarding, lazy-loaded Studio planning intent, rapid return while saves are pending, preservation of dirty edits, and ownership of persisted onboarding sessions. Independent review findings were fixed and re-reviewed with no remaining concrete findings.
+- Screenshots reviewed for light/dark studio/editor, legacy artwork, mobile studio/editor/Brand DNA, calendar and connections. Evidence and full logs remain under ignored `output/`.
+- Live server restarted with compiled UI at `http://127.0.0.1:3333`. State and JS asset returned HTTP 200. Read-only before/after checksum matched across brands, creations, settings and workspace preferences: **2 existing brands, 4 existing creations unchanged**. Vite development proxy also returned state successfully and reached schema validation for an intentionally invalid mutation; no settings were changed.
+- App CSP allows inline styles for Radix positioning/scroll locks and Sonner styling; inline scripts remain blocked. Generated creative validation and renderer CSP are unchanged. Actual AI output quality and live provider acceptance remain unverified; models are still unconfigured and provider operations used fixtures only.
+
 ## AI creative milestone — 2026-11-01
 
 - `npm run check`: passed; `npm test`: 57 passed, zero failures.

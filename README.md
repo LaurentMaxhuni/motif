@@ -12,7 +12,11 @@ npm start
 
 Open **http://127.0.0.1:3333**. Or double-click `start-motif.cmd`. To choose another port in PowerShell: `$env:PORT=3334; npm start`.
 
-For a fresh checkout, first run `npm ci`. Internet is needed to install dependencies, not for ordinary app use.
+For a fresh checkout, first run `npm ci`. `npm start` typechecks and builds the React frontend before starting the local server. Internet is needed to install dependencies, not for ordinary app use.
+
+The interface uses React, TypeScript, Tailwind CSS, official shadcn/ui components, Lucide icons, Sonner notifications and React Day Picker. Components live in `src/components/ui`; `components.json` configures the registry. Studio, workspace, calendar, Brand DNA, research, onboarding, connections, assistant, activity and settings share the same component system. The old custom DOM/CSS frontend has been removed.
+
+For frontend development run `npm run dev:server` and `npm run dev` in separate terminals, then open the Vite URL. The development proxy targets the default backend port 3333. The Windows launcher runs the production build automatically.
 
 ## What works
 
@@ -108,11 +112,13 @@ Calendar dates alone remain local reminders. External delivery happens only thro
 
 ```powershell
 npm run check
+npm run build
 npm test
 node scripts/smoke.mjs
 node scripts/features-smoke.mjs
+node scripts/navigation-smoke.mjs
 ```
 
-Backend tests cover local AI HTTP contracts, the combined model pipeline, HTML/CSS validation, browser rendering, atomic failures, persistence and edits, backup import, scheduling, image validation, and network boundaries. Browser smoke uses installed Chrome on Windows, an in-memory test database, and checks creation, editing, template and hybrid PNG export, self-contained HTML export, CSS editing, planning, reload persistence, brand isolation, mobile overflow, and absence of external requests. Set `CHROME_PATH` to override its executable path. Screenshots and results are written under `output/playwright/` (Git-ignored). Test images and model responses are deterministic fixtures; actual model quality remains unverified.
+Build before running tests. Backend tests cover local AI contracts, rendering, atomic failures, persistence, backups, scheduling, network boundaries and compiled-asset allowlists. Browser suites use installed Chrome and isolated in-memory databases to verify AI creation/revision/undo/export, approvals, planning, onboarding, research, themes, connector review/delivery and responsive keyboard navigation. Set `CHROME_PATH` to override the executable. Screenshots and results are written under `output/playwright/` (Git-ignored). Model and provider responses are deterministic fixtures; actual model quality and live platform acceptance remain unverified.
 
 Node 22 may print an experimental warning for its built-in SQLite module. This is expected.

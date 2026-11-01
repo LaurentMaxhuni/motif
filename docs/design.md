@@ -6,7 +6,9 @@ Reconstruct Holo's publicly described product workflow as a local-first applicat
 
 Brand DNA (manual or optional public website scan) → studio (templates or local AI) → editable content library → approval → local calendar → downloadable assets.
 
-Node 22.13+ server bound to 127.0.0.1, built-in SQLite for durable state, plain JavaScript frontend, local CSS and SVG illustrations. No account, telemetry, CDN, subscription, or cloud AI. OpenAI-compatible text and image endpoints accept loopback addresses only. Model inference is explicit and failures remain visible. Offline templates are labelled templates.
+Node 22.13+ server bound to 127.0.0.1 and built-in SQLite for durable state. React/TypeScript frontend built locally with Vite and Tailwind. Actual shadcn/ui registry components, Radix primitives, Lucide icons, Sonner and React Day Picker replace the original custom DOM/CSS interface. No account, telemetry, CDN, subscription, or cloud AI. OpenAI-compatible text and image endpoints accept loopback addresses only. Model inference is explicit and failures remain visible. Offline templates are labelled templates.
+
+Only compiled index/assets, the local theme bootstrap and favicon are served. Source code, private paths and traversal are excluded. App CSP permits inline styles required by Radix positioning/scroll locks and Sonner; inline scripts remain blocked. Generated creative HTML/CSS retains its separate strict validation and isolated renderer. Pages are loaded on demand. Browser theme preferences remain compatible with the original workspace.
 
 Fresh workspaces begin with a guided business setup. Website analysis and manual entry converge on a review step before any brand is saved; optional local-model setup leads to the first campaign or social connections. Existing user data is preserved. Light, dark, and system appearance are browser preferences; exported artwork is independent of interface theme.
 
