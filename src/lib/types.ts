@@ -13,5 +13,9 @@ export interface Content {
   body: string; cta: string; notes: string; scheduledAt: string; layout: number; color: string; image: string; source: string;
   design?: { html: string; css: string; imagePrompt: string }; subhead?: string; rendered?: string; createdAt?: string; updatedAt?: string
 }
-export interface Settings { textEndpoint: string; textModel: string; imageEndpoint: string; imageModel: string }
+export const cliProviders = { codex: 'Codex', claude: 'Claude Code', opencode: 'OpenCode', pi: 'Pi', omp: 'OMP' } as const
+export type CliProvider = keyof typeof cliProviders
+export interface CliProfile { executable: string; model: string }
+export interface Settings { textEndpoint: string; textModel: string; imageEndpoint: string; imageModel: string; textProvider?: 'local' | CliProvider; cliProfiles?: Partial<Record<CliProvider,CliProfile>> }
+export function textModelLabel(settings: Settings) { const id=settings.textProvider; return id && id!=='local' ? `${cliProviders[id]} · ${settings.cliProfiles?.[id]?.model || 'CLI default'}` : settings.textModel }
 export interface Snapshot { token: string; brands: Brand[]; contents: Content[]; settings: Settings; workspace: { onboardingCompleted: boolean } }
