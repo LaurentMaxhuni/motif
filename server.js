@@ -9,6 +9,7 @@ import { renderDesign } from './lib/render.js';
 import { brandContext } from './lib/brand-data.js';
 import { analyzeWebsite } from './lib/analysis.js';
 import { createConnectorService } from './lib/connectors.js';
+import { cliProviders, cliSettings, inspectCli, textReady, textLabel } from './lib/cli.js';
 
 const root=dirname(fileURLToPath(import.meta.url));
 export function createApp({ database=join(root,'data','motif.sqlite'), seed=false, analysisDependencies={},connectorFetch }={}) {
@@ -73,7 +74,7 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=fals
         let target;try{target=new URL(input.url);}catch{fail('Enter a full website URL.');}
         if(!['http:','https:'].includes(target.protocol)||target.username||target.password)fail('Use a public HTTP(S) website without credentials.');
         if(!Number.isInteger(input.maxPages)||input.maxPages<1||input.maxPages>20)fail('Choose between 1 and 20 pages.');
-        if(input.useAI&&!settings().textModel)fail('Configure a local text model in Settings before enabling AI interpretation.');
+        if(input.useAI&&!textReady(settings()))fail('Configure a text AI provider in Settings before enabling AI interpretation.');
         const controller=new AbortController();const job={id:randomUUID(),status:'running',progress:{stage:'starting',message:'Preparing a local website analysis.'},createdAt:Date.now(),controller};analysisJobs.set(job.id,job);
         void analyzeWebsite(input,settings(),{...analysisDependencies,signal:controller.signal,onProgress:progress=>{if(job.status==='running')job.progress=progress;}}).then(result=>{if(job.status==='running'){job.result=result;job.status='completed';}}).catch(error=>{if(job.status==='running'){job.status='failed';job.error=error.status?error.message:'Website analysis could not finish. Check the URL and local model, or try a smaller crawl.';}});
         return json(res,202,{id:job.id,status:job.status});
@@ -99,6 +100,18 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=fals
       }
       if(req.method==='POST'&&path==='/api/scan') {const doc=await publicDocument(text(body.url,2000));return json(res,200,extractBrand(doc.html,doc.url));}
       if(req.method==='PUT'&&path==='/api/settings') {const s=settingsInput(body);const old=store.all('settings')[0];return json(res,200,store.save('settings',s,old?.id,old?.version));}
+      if(req.method==='POST'&&path==='/api/cli/detect') {
+        const config=cliSettings(body);
+        const providers=await Promise.all(Object.keys(cliProviders).map(id=>inspectCli(id,config.cliProfiles[id])));
+        return json(res,200,{providers});
+      }
+      if(req.method==='POST'&&path==='/api/cli/test') {
+        const config={...settings(),...cliSettings(body)};
+        if(config.textProvider==='local')fail('Select a CLI provider to test.');
+        const answer=await completion(config,[{role:'user',content:'Reply with exactly MOTIF_OK. Do not use any tools.'}],false,100);
+        if(answer.trim()!=='MOTIF_OK')fail('CLI responded, but the test reply was unexpected. Check the selected model.',502);
+        return json(res,200,{ok:true,provider:textLabel(config)});
+      }
       if(req.method==='POST'&&path==='/api/models') {const endpoint=body.kind==='image'?settings().imageEndpoint:settings().textEndpoint;const r=await localRequest(endpoint,'/models',null,6000);return json(res,200,{models:(r.data||[]).filter(m=>typeof m.id==='string').map(m=>m.id)});}
       if(req.method==='POST'&&path==='/api/generate') {
         const brand=store.get('brand',text(body.brandId,100));const generationSettings=settings();const generated=await generate(generationSettings,brand,body);
