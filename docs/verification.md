@@ -1,5 +1,17 @@
 # Verification
 
+## AI creative milestone — 2026-11-01
+
+- `npm run check`: passed; `npm test`: 57 passed, zero failures.
+- `node scripts/smoke.mjs`: 21 workflow checks passed, covering AI-first generation, plain-language revision, artwork preservation/regeneration, undo, escaped copy, error preservation, late responses after reopening the same editor, conflicting actions while saving, saved revisions/schedules after reload, actual 1080×1080 PNG download, standalone HTML export, desktop/mobile, existing weekly planning and brand isolation.
+- `node scripts/features-smoke.mjs`: 18 checks passed for onboarding, research, appearance and fixture-only connectors. Connector tests seed explicitly labelled template fixtures; production studio generation uses AI.
+- Revision API tests also cover stale versions before/after inference, changed brand context, invalid instructions, malformed/unsafe model output, image-server failure, chained revisions, older creations without artwork, and absent models. Saved data is unchanged until explicit save.
+- Desktop/mobile editor screenshots and downloaded PNG visually inspected under ignored `output/playwright/`. Fixtures prove rendering and integration behavior, not model output quality or exact product reproduction.
+- Read-only live configuration check: neither model ID is configured. Local endpoints `127.0.0.1:11434/v1` and `127.0.0.1:7860/v1` refused connections. No engines started, weights downloaded, settings changed, or real-model generations performed. Real output quality remains unverified until models are configured and running.
+- Local app started at `http://127.0.0.1:3333`; state endpoint returned HTTP 200. Final independent code review found no actionable issues. Graphify code graph refreshed under ignored `graphify-out/graph.json`.
+
+## Previous verification
+
 2026-10-31, Windows, Node 22.23.4, installed Chrome 156.
 
 - Syntax: `npm run check`.

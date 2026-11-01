@@ -25,7 +25,7 @@ For a fresh checkout, first run `npm ci`. Internet is needed to install dependen
 - Offline design templates, clearly distinguished from local AI generation.
 - Configurable loopback text and image endpoints, model detection, and brand-aware chat.
 - **HTML/CSS + image mode:** local LLM designs a fresh composition and artwork prompt; local image model generates the artwork; an isolated local Chrome renderer combines them into a 1080 × 1080 creative.
-- Creative editor, four layouts, photo upload, original vector artwork, PNG/SVG and full-copy Markdown export.
+- AI creative review: request changes in plain language, optionally regenerate artwork, undo the last revision, save, and export PNG or full-copy Markdown. Existing template creations remain readable and exportable.
 - Draft, Approved, Scheduled, and Ready states, local content calendar, and five-day draft planning.
 - Workspace activity, CSV export, JSON backup, and additive backup import.
 - SQLite persistence, stale-edit conflict protection, and responsive desktop/mobile layouts.
@@ -72,12 +72,12 @@ Open **Settings** (sidebar on desktop, gear icon in the top bar on mobile). Ente
 
 Text uses `/chat/completions`; generation requests JSON-object output. Choose a model/server supporting that contract. See [Ollama’s official compatibility documentation](https://docs.ollama.com/api/openai-compatibility). Settings do not start a model or download weights.
 
-### Generate with both HTML/CSS and images
+### Create and revise a finished design with AI
 
 1. Configure **both** text and image endpoints and model IDs in Settings.
-2. In Creative studio select **HTML/CSS + image**, enter a brief, and start with **1 variation**.
+2. In Creative studio enter a brief and start with **1 variation**. AI generates the complete design and artwork; no canvas editor is required.
 3. Motif asks the text model for copy, HTML, CSS, and an artwork prompt. It sends that prompt to the image model, embeds the returned artwork, and renders the result locally. Larger batches generate artwork sequentially and can take several minutes.
-4. Open the creation to edit headline, CTA, and supporting text. Expand **HTML/CSS composition & artwork prompt** to change the layout and image prompt. Click **Update preview** to render current edits, or **Save creation** to render and persist them. Editing the image prompt does not generate a new image until you click **Local AI image**.
+4. Open the creation, describe a change, and click **Revise with AI**. Copy and composition are revised together. **Generate new artwork** replaces the artwork; leave it unchecked to preserve existing artwork. Older creations without artwork receive AI artwork on their first revision. **Undo revision** restores the previous preview. A revision returns to Draft and clears its scheduled date, requiring a new review. **Save creation** persists the preview; closing it discards unsaved changes. Invalid output or failed generation leaves the previous preview and saved creation intact.
 5. Download **PNG** for a ready-to-use creative, or **HTML** for a self-contained design with artwork embedded. Full caption/article/script text remains separately exportable. For email and SEO content the square is a promotional creative; the full copy is not squeezed into the image.
 
 This mode uses model-authored compositions, not the four SVG template layouts. Text stays separate from artwork. Current artwork generation is text-to-image; it does not send uploaded product photos to an image-editing model or guarantee exact product reproduction.

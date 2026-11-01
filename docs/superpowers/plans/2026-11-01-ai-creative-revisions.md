@@ -25,13 +25,16 @@ Interface: POST /api/revise with saved content fields, instruction, regenerateAr
 
 Files: public/app.js, public/style.css, scripts/smoke.mjs, README.md, docs/verification.md.
 
-- [ ] Adapt browser smoke to expect AI defaults and prompt revisions, absent manual controls, undo, error preservation, stale editor rejection, saved persistence and PNG export.
-- [ ] Observe browser failure, then implement prompt editor and an in-memory undo snapshot. Guard asynchronous responses with editor session identity; disable conflicting actions while revising. Keep channel/status/date controls for review.
-- [ ] Run syntax, full tests and both browser suites; inspect screenshots/export. Check available live models without changing settings or starting engines.
-- [ ] Record evidence/limitations, review final diff, commit completed flow.
+- [x] Adapt browser smoke to expect AI defaults and prompt revisions, absent manual controls, undo, error preservation, stale editor rejection, saved persistence and PNG export.
+- [x] Observe browser failure, then implement prompt editor and an in-memory undo snapshot. Guard asynchronous responses with editor session identity; disable conflicting actions while revising. Keep channel/status/date controls for review.
+- [x] Run syntax, full tests and both browser suites; inspect screenshots/export. Check available live models without changing settings or starting engines.
+- [x] Record evidence/limitations, review final diff, commit completed flow.
 
 ## Ledger
 
 - Initial inspection: clean master at b997d4f; existing hybrid generation and manual editor. Graphify graph navigated generate, completion, editor, collectEditor and updateComposition; source verified directly. Work on feature branch in current checkout.
 - Ruling: retain existing template/copy APIs for compatibility, make full AI the primary studio path. No TypeSafe integration: this milestone needs content generation, not a separate semantic selection service.
 - Task 1: 26 relevant tests passed. Initial network sandbox prevented loopback fetches; approved isolated test execution works. Red→green verified missing route and legacy artwork conversion. Existing empty-artwork creations generate artwork on their first revision.
+- Task 2: browser red→green verified studio default (template → complete AI), then 21 AI workflow checks passed. Full suite: 57 passed; feature browser suite: 18 passed. Inspected desktop/mobile and PNG output. Added a delayed-save test and disabled competing controls during save/export.
+- Final review: independent review found no actionable issues. Default reviewer role was unavailable; supported default agent performed the review instead. Graph refreshed. Local app responds on port 3333.
+- Remaining environmental validation: no configured/running local models. Both saved default endpoints refuse connections. Model quality and real product artwork remain unverified; configure engines and run a real creation/revision before advancing to calendar expansion.
