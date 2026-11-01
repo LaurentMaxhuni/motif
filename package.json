@@ -8,7 +8,7 @@
     "start": "node server.js",
     "dev": "vite",
     "test": "node --test test/*.test.js",
-    "check": "tsc --noEmit && node --check server.js && node --check lib/core.js && node --check lib/cli.js && node --check lib/design.js && node --check lib/render.js && node --check lib/analysis.js && node --check lib/brand-extract.js && node --check lib/connectors.js && node --check public/theme.js",
+    "check": "tsc --noEmit && node --check server.js && node --check lib/core.js && node --check lib/cli.js && node --check lib/images.js && node --check lib/design.js && node --check lib/render.js && node --check lib/analysis.js && node --check lib/brand-extract.js && node --check lib/connectors.js && node --check public/theme.js",
     "prestart": "npm run build",
     "dev:server": "node --watch server.js",
     "build": "tsc --noEmit && vite build"

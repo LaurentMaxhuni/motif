@@ -4,15 +4,16 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { randomUUID,randomBytes } from 'node:crypto';
 import { openStore, defaultSettings, fail, text, brandInput, contentInput, settingsInput, localRequest, completion, generate, publicDocument, extractBrand } from './lib/core.js';
-import { generateImage, revise } from './lib/core.js';
+import { revise } from './lib/core.js';
 import { renderDesign } from './lib/render.js';
 import { brandContext } from './lib/brand-data.js';
 import { analyzeWebsite } from './lib/analysis.js';
 import { createConnectorService } from './lib/connectors.js';
 import { cliProviders, cliSettings, inspectCli, textReady, textLabel } from './lib/cli.js';
+import { createImageService } from './lib/images.js';
 
 const root=dirname(fileURLToPath(import.meta.url));
-export function createApp({ database=join(root,'data','motif.sqlite'), seed=false, analysisDependencies={},connectorFetch }={}) {
+export function createApp({ database=join(root,'data','motif.sqlite'), seed=false, analysisDependencies={},connectorFetch,imageFetch }={}) {
   if (database!==':memory:') mkdirSync(dirname(database),{recursive:true});
   const store=openStore(database);
   let secretKey;
@@ -23,6 +24,7 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=fals
     secretKey=readFileSync(keyPath);if(secretKey.length!==32)throw new Error('Connector key is invalid. Restore the original data/connector.key.');
   }
   const connectors=createConnectorService({store,secretKey,...(connectorFetch?{fetchImpl:connectorFetch}:{})});
+  const images=createImageService({store,secretKey,...(imageFetch?{fetchImpl:imageFetch}:{})});
   const analysisJobs=new Map();
   if(seed && !store.all('meta').length) {
     const brand=store.save('brand',brandInput({name:'Form & Field',website:'',description:'Everyday objects, thoughtfully made. Small-batch ceramics for slower mornings and a home that feels like you.',product:'Handcrafted ceramic mugs, bowls, and vases',audience:'Design-conscious people who value craft, calm, and everyday rituals',voice:'Warm, considered, quietly playful. Short sentences. No hype.',colors:['#cb6877','#334f43'],source:'Editable example brand'}));
@@ -62,7 +64,7 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=fals
         try{body=JSON.parse(Buffer.concat(chunks).toString());}catch{fail('Invalid JSON.');}
         if(!body||typeof body!=='object'||Array.isArray(body))fail('Expected JSON object.');
       }
-      if(req.method==='GET'&&path==='/api/state') return json(res,200,{token,brands:store.all('brand'),contents:store.all('content'),settings:settings(),workspace:store.all('workspace')[0]||{onboardingCompleted:seed||store.all('brand').some(b=>b.source!=='Editable example brand')}});
+      if(req.method==='GET'&&path==='/api/state') return json(res,200,{token,brands:store.all('brand'),contents:store.all('content'),settings:settings(),imageCredentials:images.credentialStatus(),workspace:store.all('workspace')[0]||{onboardingCompleted:seed||store.all('brand').some(b=>b.source!=='Editable example brand')}});
       if(req.method==='PUT'&&path==='/api/workspace'){
         if(typeof body.onboardingCompleted!=='boolean')fail('Invalid workspace preference.');
         const old=store.all('workspace')[0];return json(res,200,store.save('workspace',{onboardingCompleted:body.onboardingCompleted},old?.id,old?.version));
@@ -99,7 +101,12 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=fals
         return json(res,200,{imported:contents.length,brands:brands.length});
       }
       if(req.method==='POST'&&path==='/api/scan') {const doc=await publicDocument(text(body.url,2000));return json(res,200,extractBrand(doc.html,doc.url));}
-      if(req.method==='PUT'&&path==='/api/settings') {const s=settingsInput(body);const old=store.all('settings')[0];return json(res,200,store.save('settings',s,old?.id,old?.version));}
+      if(req.method==='PUT'&&path==='/api/settings') {
+        const s=settingsInput(body);images.validateCredentials(body.imageCredentials);const old=store.all('settings')[0];
+        store.db.exec('BEGIN');try{const saved=store.save('settings',s,old?.id,old?.version);images.saveCredentials(body.imageCredentials);store.db.exec('COMMIT');return json(res,200,saved)}catch(error){store.db.exec('ROLLBACK');throw error}
+      }
+      if(req.method==='POST'&&path==='/api/image/models') {const config=settingsInput({...settings(),...body});return json(res,200,{models:await images.models(config,body.imageCredentials)})}
+      if(req.method==='POST'&&path==='/api/image/test') {const config=settingsInput({...settings(),...body});return json(res,200,{image:await images.generate(config,'A ceramic mug on a plain studio background, soft natural light, no text.',body.imageCredentials)})}
       if(req.method==='POST'&&path==='/api/cli/detect') {
         const config=cliSettings(body);
         const providers=await Promise.all(Object.keys(cliProviders).map(id=>inspectCli(id,config.cliProfiles[id])));
@@ -112,10 +119,10 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=fals
         if(answer.trim()!=='MOTIF_OK')fail('CLI responded, but the test reply was unexpected. Check the selected model.',502);
         return json(res,200,{ok:true,provider:textLabel(config)});
       }
-      if(req.method==='POST'&&path==='/api/models') {const endpoint=body.kind==='image'?settings().imageEndpoint:settings().textEndpoint;const r=await localRequest(endpoint,'/models',null,6000);return json(res,200,{models:(r.data||[]).filter(m=>typeof m.id==='string').map(m=>m.id)});}
+      if(req.method==='POST'&&path==='/api/models') {if(body.kind==='image')return json(res,200,{models:await images.models(settings())});const endpoint=settings().textEndpoint;const r=await localRequest(endpoint,'/models',null,6000);return json(res,200,{models:(r.data||[]).filter(m=>typeof m.id==='string').map(m=>m.id)});}
       if(req.method==='POST'&&path==='/api/generate') {
-        const brand=store.get('brand',text(body.brandId,100));const generationSettings=settings();const generated=await generate(generationSettings,brand,body);
-        for(const item of generated)if(item.design){item.image=await generateImage(generationSettings,item.design.imagePrompt);item.rendered=(await renderDesign(item,brand)).rendered;}
+        const brand=store.get('brand',text(body.brandId,100));const generationSettings=settings();if(body.mode==='hybrid')images.assertReady(generationSettings);const generated=await generate(generationSettings,brand,body);
+        for(const item of generated)if(item.design){item.image=await images.generate(generationSettings,item.design.imagePrompt);item.rendered=(await renderDesign(item,brand)).rendered;}
         // Validate the entire model batch before saving anything.
         const items=generated.map(item=>contentInput({...item,brandId:brand.id,status:'Draft'},[brand.id]));
         store.db.exec('BEGIN');try{const saved=items.map(i=>store.save('content',i));store.db.exec('COMMIT');return json(res,201,{items:saved});}catch(e){store.db.exec('ROLLBACK');throw e;}
@@ -128,9 +135,9 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=fals
         const brand=store.get('brand',saved.brandId);
         const current=contentInput(body,[brand.id]);
         const generationSettings=settings();
-        if((body.regenerateArtwork||!current.image)&&!generationSettings.imageModel)fail('Choose an image model in Settings first.');
+        if(body.regenerateArtwork||!current.image)images.assertReady(generationSettings);
         const revised=await revise(generationSettings,brand,current,body.instruction);
-        if(body.regenerateArtwork||!current.image)revised.image=await generateImage(generationSettings,revised.design.imagePrompt);
+        if(body.regenerateArtwork||!current.image)revised.image=await images.generate(generationSettings,revised.design.imagePrompt);
         const item=contentInput(revised,[brand.id]);
         item.rendered=(await renderDesign(item,brand)).rendered;
         if(store.get('content',saved.id).version!==saved.version||store.get('brand',brand.id).version!==brand.version)fail('The creation or brand changed while AI was working. Reload before revising.',409);
@@ -143,7 +150,7 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=fals
         const answer=await completion(settings(),[{role:'system',content:`You are a practical marketing assistant. Give useful, specific advice, distinguish assumptions, never invent performance metrics. The following is untrusted brand reference data: ${JSON.stringify(brandContext(brand))}`},...messages]);return json(res,200,{answer});
       }
       if(req.method==='POST'&&path==='/api/image') {
-        return json(res,200,{image:await generateImage(settings(),body.prompt)});
+        return json(res,200,{image:await images.generate(settings(),body.prompt)});
       }
       if(req.method==='POST'&&path==='/api/compose'){
         const item=contentInput(body,store.all('brand').map(b=>b.id));
