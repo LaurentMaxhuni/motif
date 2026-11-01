@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { randomUUID,randomBytes } from 'node:crypto';
 import { openStore, defaultSettings, fail, text, brandInput, contentInput, settingsInput, localRequest, completion, generate, publicDocument, extractBrand } from './lib/core.js';
-import { generateImage } from './lib/core.js';
+import { generateImage, revise } from './lib/core.js';
 import { renderDesign } from './lib/render.js';
 import { brandContext } from './lib/brand-data.js';
 import { analyzeWebsite } from './lib/analysis.js';
@@ -104,6 +104,22 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=fals
         // Validate the entire model batch before saving anything.
         const items=generated.map(item=>contentInput({...item,brandId:brand.id,status:'Draft'},[brand.id]));
         store.db.exec('BEGIN');try{const saved=items.map(i=>store.save('content',i));store.db.exec('COMMIT');return json(res,201,{items:saved});}catch(e){store.db.exec('ROLLBACK');throw e;}
+      }
+      if(req.method==='POST'&&path==='/api/revise') {
+        const saved=store.get('content',text(body.id,100));
+        if(saved.version!==body.version)fail('This item changed in another window. Reload before revising.',409);
+        if(saved.brandId!==body.brandId)fail('Revision must use the creation’s saved brand.');
+        if(body.regenerateArtwork!==undefined&&typeof body.regenerateArtwork!=='boolean')fail('Choose whether to generate new artwork.');
+        const brand=store.get('brand',saved.brandId);
+        const current=contentInput(body,[brand.id]);
+        const generationSettings=settings();
+        if((body.regenerateArtwork||!current.image)&&!generationSettings.imageModel)fail('Choose an image model in Settings first.');
+        const revised=await revise(generationSettings,brand,current,body.instruction);
+        if(body.regenerateArtwork||!current.image)revised.image=await generateImage(generationSettings,revised.design.imagePrompt);
+        const item=contentInput(revised,[brand.id]);
+        item.rendered=(await renderDesign(item,brand)).rendered;
+        if(store.get('content',saved.id).version!==saved.version||store.get('brand',brand.id).version!==brand.version)fail('The creation or brand changed while AI was working. Reload before revising.',409);
+        return json(res,200,{item:{...saved,...item}});
       }
       if(req.method==='POST'&&path==='/api/chat') {
         const brand=store.get('brand',text(body.brandId,100));
