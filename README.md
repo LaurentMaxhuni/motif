@@ -12,7 +12,7 @@ npm start
 
 Open **http://127.0.0.1:3333**. Or double-click `start-motif.cmd`. To choose another port in PowerShell: `$env:PORT=3334; npm start`.
 
-For a fresh checkout, first run `npm ci`. `npm start` typechecks and builds the React frontend before starting the local server. Internet is needed to install dependencies, not for ordinary app use.
+For a fresh checkout, first run `npm ci`. `npm start` typechecks and builds the React frontend before starting the local server. Internet is needed to install dependencies and to use cloud-backed CLI providers. Local templates and configured local models can work offline.
 
 The interface uses React, TypeScript, Tailwind CSS, official shadcn/ui components, Lucide icons, Sonner notifications and React Day Picker. Components live in `src/components/ui`; `components.json` configures the registry. Studio, workspace, calendar, Brand DNA, research, onboarding, connections, assistant, activity and settings share the same component system. The old custom DOM/CSS frontend has been removed.
 
@@ -23,12 +23,12 @@ For frontend development run `npm run dev:server` and `npm run dev` in separate 
 - Multiple brands with editable Brand DNA, voice, audience, palette, and product photography.
 - Deep local website analysis: up to 20 pages, robots/sitemap discovery, company and product evidence, audience and voice, visual identity, SEO audits, and downloadable source reports. Review before saving.
 - Light, dark, and system appearance, remembered per browser.
-- Guided first-business onboarding with website research, editable Brand DNA, optional local-model setup, and a first-campaign handoff.
+- Guided first-business onboarding with website research, editable Brand DNA, optional AI-provider setup, and a first-campaign handoff.
 - Brand-scoped Buffer, Metricool, and Zernio connectors for explicit drafts and scheduling, encrypted local credentials, and delivery history.
 - Creative studio for social posts, ads, emails, SEO articles, and video scripts.
 - Offline design templates, clearly distinguished from local AI generation.
-- Configurable loopback text and image endpoints, model detection, and brand-aware chat.
-- **HTML/CSS + image mode:** local LLM designs a fresh composition and artwork prompt; local image model generates the artwork; an isolated local Chrome renderer combines them into a 1080 × 1080 creative.
+- Configurable loopback text/image endpoints plus Codex, Claude Code, OpenCode, Pi and OMP CLI text providers, installation checks, and brand-aware chat.
+- **HTML/CSS + image mode:** selected text AI provider designs a fresh composition and artwork prompt; local image model generates the artwork; an isolated local Chrome renderer combines them into a 1080 × 1080 creative.
 - AI creative review: request changes in plain language, optionally regenerate artwork, undo the last revision, save, and export PNG or full-copy Markdown. Existing template creations remain readable and exportable.
 - Draft, Approved, Scheduled, and Ready states, local content calendar, and five-day draft planning.
 - Workspace activity, CSV export, JSON backup, and additive backup import.
@@ -38,15 +38,17 @@ Fresh installations start with onboarding and an empty workspace. Existing Form 
 
 ## Brand DNA research
 
-Onboarding can analyze your website before creating the business. For an existing business open **Brand DNA → Analyze website**. Choose 6, 12, or 20 pages and optionally enable interpretation with your configured local text model.
+Onboarding can analyze your website before creating the business. For an existing business open **Brand DNA → Analyze website**. Choose 6, 12, or 20 pages and optionally enable interpretation with your selected text AI provider.
 
-Extraction runs in the local Node process. It examines public page copy, headings, metadata, structured data, CTA wording, product/service candidates, explicit audience wording, palette/font/logo declarations, SEO issues, and coverage gaps. Reports include source URLs, quotes, warnings, and observed/inferred labels. Local AI can interpret audience and voice using validated source quotations. Unsupported or failed inference preserves the extracted findings.
+Extraction runs in the local Node process. It examines public page copy, headings, metadata, structured data, CTA wording, product/service candidates, explicit audience wording, palette/font/logo declarations, SEO issues, and coverage gaps. Reports include source URLs, quotes, warnings, and observed/inferred labels. Your selected AI provider can interpret audience and voice using validated source quotations. Unsupported or failed inference preserves the extracted findings.
 
 Review and apply the proposed fields before your stored Brand DNA changes. Approved research travels into subsequent local generation context. **Full report** downloads all findings and evidence for the displayed business. See [analysis scope and bounds](docs/brand-analysis.md).
 
 Extraction handles nested product data, product groups, streamed server HTML and modern CSS colors. Repeatable live/captured evaluations and remaining limits are documented in [brand extraction evaluation](docs/brand-extraction-evaluation.md). Run `node scripts/brand-research-smoke.mjs` for the isolated research browser workflow.
 
 The crawler respects robots.txt and uses bounded same-origin requests. It does not run the target site's JavaScript or download its images/fonts. Sites that render their content only with JavaScript may need manual details. Enter the final canonical origin if a www/non-www redirect is refused. This is source-based research, not independent verification of a publisher's claims.
+
+Text generation can also use an installed Codex, Claude Code, OpenCode, Pi or OMP CLI. Choose one in **Settings → AI providers**, detect the installation, test its login/model, then save. See [CLI setup and privacy](docs/cli-providers.md). CLI inference may use cloud services; artwork still needs a separate local image server.
 
 ## Appearance
 
@@ -100,7 +102,7 @@ The server binds to `127.0.0.1`. Database: `data/motif.sqlite` with SQLite WAL s
 
 Connector credentials are AES-256-GCM encrypted in a separate SQLite table using `data/connector.key`. JSON exports exclude connections, delivery history, credential ciphertext, and that key; re-enter credentials on another installation. A physical database backup does contain encrypted secrets: protect it and its key with normal local account/filesystem controls. Do not delete the key if you want existing connections to keep working.
 
-No telemetry, remote fonts, cloud AI, or automatic model downloads. Browser network is restricted to this app by Content Security Policy. Model endpoint settings accept loopback URLs only; inference redirects are rejected. A local model server must itself be configured to run locally; Motif cannot prevent a separate server from forwarding requests. Website requests and optional connector operations intentionally use the network from the server; no cloud service performs Brand DNA analysis.
+No app telemetry, remote fonts, automatic model downloads, or automatic cloud fallback. Selecting a CLI provider explicitly allows its configured model service, which may be cloud-hosted. Browser network is restricted to this app by Content Security Policy. Model endpoint settings accept loopback URLs only; inference redirects are rejected. A local model server must itself be configured to run locally; Motif cannot prevent a separate server from forwarding requests. Website requests and optional connector operations intentionally use the network from the server; website extraction stays local; optional CLI interpretation sends supplied excerpts to the CLI’s configured model.
 
 Quick metadata scanning intentionally contacts one public HTTP(S) page; deep analysis additionally follows permitted same-origin pages, robots/sitemap files and up to three stylesheets. It never logs into websites or runs their scripts. DNS is checked and pinned per request; private destinations, unusual ports, oversized documents, disallowed paths, and excessive redirects are refused. Active analyses are temporary jobs; review and apply a result to persist it. Restarting the server ends pending jobs.
 

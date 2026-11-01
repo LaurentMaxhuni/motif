@@ -1,5 +1,14 @@
 # Verification
 
+## CLI AI providers — 2026-11-01
+
+- Added opt-in Codex, Claude Code, OpenCode, Pi and OMP text providers. Existing local text/image configuration remains supported. No credentials copied into the workspace; CLI provider selection can send supplied context to its configured cloud model.
+- Backend suite: 105 passed. TypeScript/syntax checks and production build passed. Actual child-process fixtures verify all five assistant/generation/research routes, design/revision validation, quoted stdin, launcher resolution, output limits, failures, retries, timeout and cancellation.
+- Dedicated CLI browser suite: 10 passed. Existing creative suite: 27 passed. Existing feature suite: 21 passed. Provider profiles survive reload; detection/testing do not save; research requires review; image-server fields remain separate. Settings screenshots visually inspected at 390px, with overflow checks at 390/768/1440px.
+- Installed-provider probes found all five CLIs. Codex and Claude Code returned valid JSON to generic prompts. OpenCode's provider returned 401; Pi and OMP's configured Unsloth models were unreachable. These environmental limits remain; no login/model settings were changed. See [setup, exact versions and limits](cli-providers.md).
+- Graphify code index refreshed under ignored `graphify-out/graph.json`. No dependencies added.
+- Restarted app API detected all five installed CLIs and completed an explicit Claude test without saving settings. Compiled assets/state returned successfully; checksum confirmed unchanged saved data (2 brands, 4 creations and existing settings).
+
 ## Local brand extraction — 2026-11-01
 
 - Full backend suite: 97 passed. TypeScript/syntax checks and production build passed. Initial sandboxed run could not reach loopback fixture servers (`EACCES`); rerun with loopback access passed.
