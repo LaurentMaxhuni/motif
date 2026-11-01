@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { FieldSelect, FieldSelectItem } from '@/components/field-select'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -50,7 +50,7 @@ export function ResearchForm({ website, model, research, onResult, onWebsiteChan
   const [url, setUrl] = useState(website), [limit, setLimit] = useState('12'), [useAI, setUseAI] = useState(Boolean(model))
   return <form className="space-y-5" onSubmit={async event => { event.preventDefault(); const result = await research.start({ url, maxPages: Number(limit), useAI: Boolean(model) && useAI }); if (result) onResult(result) }}>
     <div className="space-y-2"><Label htmlFor="research-url">Public website</Label><Input id="research-url" type="url" required value={url} onChange={event => { setUrl(event.target.value); onWebsiteChange?.(event.target.value) }} disabled={research.running} placeholder="https://yourbusiness.com" /></div>
-    <div className="space-y-2"><Label htmlFor="research-limit">Page limit</Label><NativeSelect id="research-limit" value={limit} onChange={event => setLimit(event.target.value)} disabled={research.running}><NativeSelectOption value="6">6 pages · focused</NativeSelectOption><NativeSelectOption value="12">12 pages · recommended</NativeSelectOption><NativeSelectOption value="20">20 pages · deep</NativeSelectOption></NativeSelect></div>
+    <div className="space-y-2"><Label htmlFor="research-limit">Page limit</Label><FieldSelect id="research-limit" value={limit} onValueChange={value=> setLimit(value)} disabled={research.running}><FieldSelectItem value="6">6 pages · focused</FieldSelectItem><FieldSelectItem value="12">12 pages · recommended</FieldSelectItem><FieldSelectItem value="20">20 pages · deep</FieldSelectItem></FieldSelect></div>
     <div className="flex items-start gap-3"><Checkbox id="research-ai" checked={Boolean(model) && useAI} onCheckedChange={value => setUseAI(value === true)} disabled={!model || research.running} /><div className="space-y-1"><Label htmlFor="research-ai">Interpret findings with my local model</Label><p className="text-xs text-muted-foreground">{model || 'No text model configured. Extraction works without one.'}</p></div></div>
     <p className="text-sm text-muted-foreground">Fetches public website pages. Extraction runs locally; optional interpretation uses your configured local model. Review findings before saving.</p>
     {research.error && <Alert variant="destructive"><AlertDescription>{research.error}</AlertDescription></Alert>}
