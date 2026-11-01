@@ -11,7 +11,7 @@ let app,base,token,brandId,mock,mockUrl,requests=[],mockMode='normal';
 const start=server=>new Promise(resolve=>server.listen(0,'127.0.0.1',()=>resolve(`http://127.0.0.1:${server.address().port}`)));
 async function call(path,method='GET',body,headers={}){const response=await fetch(base+'/api/'+path,{method,headers:{...(body?{'Content-Type':'application/json','X-Motif-Token':token}:{}),...headers},body:body?JSON.stringify(body):undefined});return {status:response.status,data:await response.json()};}
 before(async()=>{
-  app=createApp({database:':memory:'});base=await start(app.server);const initial=await call('state');token=initial.data.token;brandId=initial.data.brands[0].id;
+  app=createApp({database:':memory:',seed:true});base=await start(app.server);const initial=await call('state');token=initial.data.token;brandId=initial.data.brands[0].id;
   mock=http.createServer(async(req,res)=>{let body='';for await(const c of req)body+=c;const data=body?JSON.parse(body):{};requests.push({path:req.url,data});res.setHeader('Content-Type','application/json');
     if(req.url==='/v1/models')return res.end(JSON.stringify({data:[{id:'fixture-model'}]}));
     if(req.url==='/v1/images/generations'){if(mockMode==='image-failure'){res.statusCode=503;return res.end('{}');}return res.end(JSON.stringify({data:[{b64_json:fixturePNG().toString('base64')}]}));}

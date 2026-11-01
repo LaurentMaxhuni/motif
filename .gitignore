@@ -3,3 +3,4 @@ data/
 output/
 *.log
 .env
+graphify-out/

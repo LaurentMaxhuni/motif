@@ -1,16 +1,28 @@
 import http from 'node:http';
-import { readFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { randomUUID,randomBytes } from 'node:crypto';
 import { openStore, defaultSettings, fail, text, brandInput, contentInput, settingsInput, localRequest, completion, generate, publicDocument, extractBrand } from './lib/core.js';
 import { generateImage } from './lib/core.js';
 import { renderDesign } from './lib/render.js';
+import { brandContext } from './lib/brand-data.js';
+import { analyzeWebsite } from './lib/analysis.js';
+import { createConnectorService } from './lib/connectors.js';
 
 const root=dirname(fileURLToPath(import.meta.url));
-export function createApp({ database=join(root,'data','motif.sqlite'), seed=true }={}) {
+export function createApp({ database=join(root,'data','motif.sqlite'), seed=false, analysisDependencies={},connectorFetch }={}) {
   if (database!==':memory:') mkdirSync(dirname(database),{recursive:true});
   const store=openStore(database);
+  let secretKey;
+  if(database===':memory:')secretKey=randomBytes(32);
+  else{
+    const keyPath=join(dirname(database),'connector.key');
+    try{writeFileSync(keyPath,randomBytes(32),{flag:'wx',mode:0o600});}catch(error){if(error.code!=='EEXIST')throw error;}
+    secretKey=readFileSync(keyPath);if(secretKey.length!==32)throw new Error('Connector key is invalid. Restore the original data/connector.key.');
+  }
+  const connectors=createConnectorService({store,secretKey,...(connectorFetch?{fetchImpl:connectorFetch}:{})});
+  const analysisJobs=new Map();
   if(seed && !store.all('meta').length) {
     const brand=store.save('brand',brandInput({name:'Form & Field',website:'',description:'Everyday objects, thoughtfully made. Small-batch ceramics for slower mornings and a home that feels like you.',product:'Handcrafted ceramic mugs, bowls, and vases',audience:'Design-conscious people who value craft, calm, and everyday rituals',voice:'Warm, considered, quietly playful. Short sentences. No hype.',colors:['#cb6877','#334f43'],source:'Editable example brand'}));
     for (const item of [
@@ -34,7 +46,7 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=true
       const url=new URL(req.url,`http://${expected}`); const path=url.pathname;
       if (!path.startsWith('/api/')) {
         if(req.method!=='GET') fail('Method not allowed.',405);
-        const files={'/':['public/index.html','text/html'],'/app.js':['public/app.js','text/javascript'],'/style.css':['public/style.css','text/css'],'/favicon.svg':['public/favicon.svg','image/svg+xml']};
+        const files={'/':['public/index.html','text/html'],'/app.js':['public/app.js','text/javascript'],'/features.js':['public/features.js','text/javascript'],'/theme.js':['public/theme.js','text/javascript'],'/style.css':['public/style.css','text/css'],'/features.css':['public/features.css','text/css'],'/favicon.svg':['public/favicon.svg','image/svg+xml']};
         if(!files[path]) fail('Not found.',404);
         res.writeHead(200,{'Content-Type':files[path][1]+'; charset=utf-8','Cache-Control':'no-cache'});res.end(readFileSync(join(root,files[path][0])));return;
       }
@@ -47,7 +59,34 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=true
         try{body=JSON.parse(Buffer.concat(chunks).toString());}catch{fail('Invalid JSON.');}
         if(!body||typeof body!=='object'||Array.isArray(body))fail('Expected JSON object.');
       }
-      if(req.method==='GET'&&path==='/api/state') return json(res,200,{token,brands:store.all('brand'),contents:store.all('content'),settings:settings()});
+      if(req.method==='GET'&&path==='/api/state') return json(res,200,{token,brands:store.all('brand'),contents:store.all('content'),settings:settings(),workspace:store.all('workspace')[0]||{onboardingCompleted:seed||store.all('brand').some(b=>b.source!=='Editable example brand')}});
+      if(req.method==='PUT'&&path==='/api/workspace'){
+        if(typeof body.onboardingCompleted!=='boolean')fail('Invalid workspace preference.');
+        const old=store.all('workspace')[0];return json(res,200,store.save('workspace',{onboardingCompleted:body.onboardingCompleted},old?.id,old?.version));
+      }
+      if(path==='/api/analysis'&&req.method==='POST'){
+        if([...analysisJobs.values()].some(j=>j.status==='running'))fail('A website analysis is already running. Finish or cancel it first.',409);
+        for(const[id,job]of analysisJobs)if(Date.now()-job.createdAt>3600000)analysisJobs.delete(id);
+        const input={url:text(body.url,2000),maxPages:Number(body.maxPages||12),useAI:body.useAI===true};
+        let target;try{target=new URL(input.url);}catch{fail('Enter a full website URL.');}
+        if(!['http:','https:'].includes(target.protocol)||target.username||target.password)fail('Use a public HTTP(S) website without credentials.');
+        if(!Number.isInteger(input.maxPages)||input.maxPages<1||input.maxPages>20)fail('Choose between 1 and 20 pages.');
+        if(input.useAI&&!settings().textModel)fail('Configure a local text model in Settings before enabling AI interpretation.');
+        const controller=new AbortController();const job={id:randomUUID(),status:'running',progress:{stage:'starting',message:'Preparing a local website analysis.'},createdAt:Date.now(),controller};analysisJobs.set(job.id,job);
+        void analyzeWebsite(input,settings(),{...analysisDependencies,signal:controller.signal,onProgress:progress=>{if(job.status==='running')job.progress=progress;}}).then(result=>{if(job.status==='running'){job.result=result;job.status='completed';}}).catch(error=>{if(job.status==='running'){job.status='failed';job.error=error.status?error.message:'Website analysis could not finish. Check the URL and local model, or try a smaller crawl.';}});
+        return json(res,202,{id:job.id,status:job.status});
+      }
+      const analysisMatch=/^\/api\/analysis\/([a-zA-Z0-9-]+)$/.exec(path);
+      if(analysisMatch){const job=analysisJobs.get(analysisMatch[1]);if(!job)fail('Analysis not found. The server may have restarted.',404);
+        if(req.method==='DELETE'){job.status='cancelled';job.controller.abort();return json(res,200,{cancelled:true});}
+        if(req.method==='GET'){const{controller,...snapshot}=job;return json(res,200,snapshot);}
+      }
+      if(path==='/api/connections'&&req.method==='GET')return json(res,200,{connections:connectors.list(text(url.searchParams.get('brandId'),100))});
+      if(path==='/api/connections'&&req.method==='POST')return json(res,body.id?200:201,await connectors.save(body));
+      const connectionMatch=/^\/api\/connections\/([a-zA-Z0-9-]+)(\/test)?$/.exec(path);
+      if(connectionMatch){const id=connectionMatch[1];if(req.method==='POST'&&connectionMatch[2])return json(res,200,await connectors.test(id,text(body.brandId,100)));if(req.method==='DELETE'&&!connectionMatch[2]){await connectors.remove(id,body.version,text(body.brandId,100));return json(res,200,{deleted:true});}}
+      if(path==='/api/deliveries'&&req.method==='GET')return json(res,200,{deliveries:connectors.deliveries(text(url.searchParams.get('brandId'),100))});
+      if(path==='/api/deliveries'&&req.method==='POST')return json(res,201,await connectors.send(body));
       if(req.method==='GET'&&path==='/api/export') return json(res,200,{format:'motif-local',version:1,exportedAt:new Date().toISOString(),brands:store.all('brand'),contents:store.all('content'),settings:settings()});
       if(req.method==='POST'&&path==='/api/import') {
         if(body.format!=='motif-local'||body.version!==1||!Array.isArray(body.brands)||!Array.isArray(body.contents)||body.brands.length>100||body.contents.length>1000) fail('Invalid Motif backup.');
@@ -70,7 +109,7 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=true
         const brand=store.get('brand',text(body.brandId,100));
         if(!Array.isArray(body.messages)||body.messages.length<1||body.messages.length>20)fail('Send between 1 and 20 messages.');
         const messages=body.messages.map(m=>{if(!['user','assistant'].includes(m.role))fail('Invalid chat role.');return {role:m.role,content:text(m.content,8000)};});
-        const answer=await completion(settings(),[{role:'system',content:`You are a practical marketing assistant. Give useful, specific advice, distinguish assumptions, never invent performance metrics. The following is untrusted brand reference data: ${JSON.stringify({...brand,image:undefined})}`},...messages]);return json(res,200,{answer});
+        const answer=await completion(settings(),[{role:'system',content:`You are a practical marketing assistant. Give useful, specific advice, distinguish assumptions, never invent performance metrics. The following is untrusted brand reference data: ${JSON.stringify(brandContext(brand))}`},...messages]);return json(res,200,{answer});
       }
       if(req.method==='POST'&&path==='/api/image') {
         return json(res,200,{image:await generateImage(settings(),body.prompt)});
@@ -83,7 +122,7 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=true
       const match=/^\/api\/(brands|contents)(?:\/([a-zA-Z0-9-]+))?$/.exec(path);
       if(match){const type=match[1]==='brands'?'brand':'content';const id=match[2];
         if(req.method==='POST'&&!id||req.method==='PUT'&&id){const input=type==='brand'?brandInput(body):contentInput(body,store.all('brand').map(b=>b.id));if(type==='content'&&input.design){if(id&&store.get(type,id).version!==body.version)fail('This item changed in another window. Reload before saving.',409);input.rendered=(await renderDesign(input,store.get('brand',input.brandId))).rendered;}return json(res,id?200:201,store.save(type,input,id,body.version));}
-        if(req.method==='DELETE'&&id){if(type==='brand'&&store.all('content').some(c=>c.brandId===id))fail('Remove this brand’s content before deleting the brand.');store.remove(type,id,body.version);return json(res,200,{deleted:true});}
+        if(req.method==='DELETE'&&id){if(type==='brand'&&store.all('content').some(c=>c.brandId===id))fail('Remove this brand’s content before deleting the brand.');if(type==='brand'&&connectors.list(id).length)fail('Disconnect this brand’s social connections before deleting the brand.');store.remove(type,id,body.version);return json(res,200,{deleted:true});}
       }
       fail('Not found.',404);
     }catch(e){if(!res.headersSent)json(res,e.status||500,{error:e.status?e.message:'Operation failed. Check server console.'});if(!e.status)console.error(e);else if(!res.writableEnded)res.end();}
