@@ -1,5 +1,14 @@
 # Verification
 
+## Custom dropdowns and lighter chrome — 2026-11-01
+
+- Replaced visible native dropdowns throughout brand switching, studio, planning, editor, research, calendar, settings and connector delivery forms with official shadcn/Radix Select menus. Shared FieldSelect composition preserves controlled values, labels, disabled states, numeric values and hidden form serialization. Empty brand selection shows a disabled placeholder. Removed the unused native-select component.
+- Lightened shared borders in both themes, removed card/input/textarea/button shadows, and reduced focus rings from 3px to 2px with neutral colors. Keyboard focus and destructive/invalid states remain visible. Fixed a tablet-width connection-card overflow and prevented custom-menu focus from scrolling the editor header out of view; regressions cover both.
+- `npm run check` and `npm run build`: passed. No runtime dependencies, environment variables or configuration changes added; Select uses already-installed Radix. Styling changes are shared component classes and existing CSS tokens.
+- Existing creative browser suite: 27 checks passed. Existing feature browser suite: 21 checks passed. Tests now operate visible custom menu options rather than native selectOption APIs; form values, brand isolation, approvals, exports, backups and fixture-only sends remain covered.
+- `node scripts/select-smoke.mjs`: passed custom pointer/keyboard selection, End/Enter, Escape/focus restoration, computed 1px border/2px focus ring, light/dark menus, dialog-contained menus and overflow checks at 390/768/1440px. Inspected studio/settings plus all other screens, editor, research, connector and onboarding forms in the responsive screenshot matrix under ignored output/playwright/.
+- Live compiled asset/state check passed; saved-data checksum unchanged (2 brands, 4 creations). Existing model/provider environmental limits are unchanged.
+
 ## shadcn/ui migration — 2026-11-01
 
 - Entire frontend migrated to React/TypeScript, Tailwind, official shadcn/ui registry components, Lucide, Sonner and React Day Picker. Original custom DOM/CSS frontend removed. All routes use the same primitives, neutral theme, responsive Sidebar/Sheet, forms and dialogs.

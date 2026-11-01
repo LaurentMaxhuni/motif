@@ -117,6 +117,7 @@ npm test
 node scripts/smoke.mjs
 node scripts/features-smoke.mjs
 node scripts/navigation-smoke.mjs
+node scripts/select-smoke.mjs
 ```
 
 Build before running tests. Backend tests cover local AI contracts, rendering, atomic failures, persistence, backups, scheduling, network boundaries and compiled-asset allowlists. Browser suites use installed Chrome and isolated in-memory databases to verify AI creation/revision/undo/export, approvals, planning, onboarding, research, themes, connector review/delivery and responsive keyboard navigation. Set `CHROME_PATH` to override the executable. Screenshots and results are written under `output/playwright/` (Git-ignored). Model and provider responses are deterministic fixtures; actual model quality and live platform acceptance remain unverified.
