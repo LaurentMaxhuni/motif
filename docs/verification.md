@@ -1,5 +1,13 @@
 # Verification
 
+## Local brand extraction — 2026-11-01
+
+- Full backend suite: 97 passed. TypeScript/syntax checks and production build passed. Initial sandboxed run could not reach loopback fixture servers (`EACCES`); rerun with loopback access passed.
+- Dedicated research browser suite: 10 passed. Existing feature browser suite: 21 passed. Isolated fixtures cover review/edit/apply/reload, report export, discard, optimistic conflicts, cancellation and model fallback.
+- Four live public samples plus complete captured-response replay: five readable pages and saveable reports per site, no duplicate product names or checked legal/cart/survey labels. See [evaluation and limits](brand-extraction-evaluation.md).
+- Independent review found manufacturer/website identity confusion and weak candidate merge precedence; both corrected with regressions. Name-only structured upgrades preserve description provenance.
+- Restarted local server; compiled assets/state available and saved-data checksum unchanged (2 brands, 4 creations). No local model is configured/running, so real model interpretation quality remains unverified.
+
 ## Custom dropdowns and lighter chrome — 2026-11-01
 
 - Replaced visible native dropdowns throughout brand switching, studio, planning, editor, research, calendar, settings and connector delivery forms with official shadcn/Radix Select menus. Shared FieldSelect composition preserves controlled values, labels, disabled states, numeric values and hidden form serialization. Empty brand selection shows a disabled placeholder. Removed the unused native-select component.

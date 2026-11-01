@@ -44,6 +44,8 @@ Extraction runs in the local Node process. It examines public page copy, heading
 
 Review and apply the proposed fields before your stored Brand DNA changes. Approved research travels into subsequent local generation context. **Full report** downloads all findings and evidence for the displayed business. See [analysis scope and bounds](docs/brand-analysis.md).
 
+Extraction handles nested product data, product groups, streamed server HTML and modern CSS colors. Repeatable live/captured evaluations and remaining limits are documented in [brand extraction evaluation](docs/brand-extraction-evaluation.md). Run `node scripts/brand-research-smoke.mjs` for the isolated research browser workflow.
+
 The crawler respects robots.txt and uses bounded same-origin requests. It does not run the target site's JavaScript or download its images/fonts. Sites that render their content only with JavaScript may need manual details. Enter the final canonical origin if a www/non-www redirect is refused. This is source-based research, not independent verification of a publisher's claims.
 
 ## Appearance
