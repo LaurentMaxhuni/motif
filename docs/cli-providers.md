@@ -1,6 +1,6 @@
 # CLI text AI providers
 
-In **Settings → AI providers**, choose Codex, Claude Code, OpenCode, Pi or OMP from **Text AI provider**. The same selection powers brand interpretation, assistant replies, copy, weekly planning, composition design and creative revisions. Image generation still uses the configured local OpenAI-compatible image server.
+In **Settings → AI providers**, choose Codex, Claude Code, OpenCode, Pi or OMP from **Text AI provider**. The same selection powers brand interpretation, assistant replies, copy, weekly planning, composition design and creative revisions. Image generation independently supports [Cloudflare, custom local servers and Unsloth Studio](image-providers.md).
 
 Install and sign in to the chosen CLI in your terminal first. Motif does not install agents, start model servers, copy credentials into its database or initiate login. Leave the executable path blank for PATH detection; otherwise enter an absolute executable or JavaScript entry-point path without arguments. Standard Windows npm/pnpm `.cmd` launchers resolve to their entry point without running a command shell. Custom shell scripts and PowerShell wrappers are unsupported.
 

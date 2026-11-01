@@ -28,7 +28,7 @@ For frontend development run `npm run dev:server` and `npm run dev` in separate 
 - Creative studio for social posts, ads, emails, SEO articles, and video scripts.
 - Offline design templates, clearly distinguished from local AI generation.
 - Configurable loopback text/image endpoints plus Codex, Claude Code, OpenCode, Pi and OMP CLI text providers, installation checks, and brand-aware chat.
-- **HTML/CSS + image mode:** selected text AI provider designs a fresh composition and artwork prompt; local image model generates the artwork; an isolated local Chrome renderer combines them into a 1080 × 1080 creative.
+- **HTML/CSS + image mode:** selected text AI provider designs a fresh composition and artwork prompt; selected image provider generates the artwork; an isolated local Chrome renderer combines them into a 1080 × 1080 creative.
 - AI creative review: request changes in plain language, optionally regenerate artwork, undo the last revision, save, and export PNG or full-copy Markdown. Existing template creations remain readable and exportable.
 - Draft, Approved, Scheduled, and Ready states, local content calendar, and five-day draft planning.
 - Workspace activity, CSV export, JSON backup, and additive backup import.
@@ -48,7 +48,7 @@ Extraction handles nested product data, product groups, streamed server HTML and
 
 The crawler respects robots.txt and uses bounded same-origin requests. It does not run the target site's JavaScript or download its images/fonts. Sites that render their content only with JavaScript may need manual details. Enter the final canonical origin if a www/non-www redirect is refused. This is source-based research, not independent verification of a publisher's claims.
 
-Text generation can also use an installed Codex, Claude Code, OpenCode, Pi or OMP CLI. Choose one in **Settings → AI providers**, detect the installation, test its login/model, then save. See [CLI setup and privacy](docs/cli-providers.md). CLI inference may use cloud services; artwork still needs a separate local image server.
+Text generation can also use an installed Codex, Claude Code, OpenCode, Pi or OMP CLI. Choose one in **Settings → AI providers**, detect the installation, test its login/model, then save. See [CLI setup and privacy](docs/cli-providers.md). CLI inference may use cloud services; artwork can use Cloudflare, a custom local URL, or Unsloth Studio. See [image setup](docs/image-providers.md).
 
 ## Appearance
 
@@ -82,7 +82,7 @@ Text uses `/chat/completions`; generation requests JSON-object output. Choose a 
 
 ### Create and revise a finished design with AI
 
-1. Configure **both** text and image endpoints and model IDs in Settings.
+1. Configure a **text AI provider** and an **image AI provider** in Settings. Images can use Cloudflare Workers AI, a custom local URL or Unsloth Studio.
 2. In Creative studio enter a brief and start with **1 variation**. AI generates the complete design and artwork; no canvas editor is required.
 3. Motif asks the text model for copy, HTML, CSS, and an artwork prompt. It sends that prompt to the image model, embeds the returned artwork, and renders the result locally. Larger batches generate artwork sequentially and can take several minutes.
 4. Open the creation, describe a change, and click **Revise with AI**. Copy and composition are revised together. **Generate new artwork** replaces the artwork; leave it unchecked to preserve existing artwork. Older creations without artwork receive AI artwork on their first revision. **Undo revision** restores the previous preview. A revision returns to Draft and clears its scheduled date, requiring a new review. **Save creation** persists the preview; closing it discards unsaved changes. Invalid output or failed generation leaves the previous preview and saved creation intact.
@@ -92,7 +92,7 @@ This mode uses model-authored compositions, not the four SVG template layouts. T
 
 Rendering requires installed Chrome/Chromium/Edge. Windows Chrome and Edge, common Linux Chromium paths, and macOS Chrome are detected. Set `CHROME_PATH` if yours is elsewhere. Renderer and output documents block scripts and network access; HTML tags/attributes and CSS are validated before rendering. CSS parsing uses [CSSTree](https://github.com/csstree/csstree); local browser rendering uses [Playwright](https://playwright.dev/docs/api/class-browser).
 
-Images require an OpenAI-compatible `/images/generations` server returning PNG `b64_json`. Standard ComfyUI is not directly compatible; use an adapter or upload a locally produced image. Video output is a script, not a rendered video. No image or text model is bundled. Authenticated local endpoints are not supported in this version.
+Images support Cloudflare FLUX.1 Schnell or an OpenAI-compatible local `/images/generations` server, including Unsloth Studio. Local image servers can use API-key authentication. PNG, JPEG and WebP base64 images are accepted; returned URLs are never fetched. Standard ComfyUI needs a compatible adapter. Text endpoint authentication is separate and remains unsupported. No model is bundled. See [image provider setup and limits](docs/image-providers.md).
 
 AI contracts are tested against a real loopback HTTP fixture; output quality and compatibility with your installed models require live verification. Errors are shown without silently substituting template output.
 
@@ -100,9 +100,9 @@ AI contracts are tested against a real loopback HTTP fixture; output quality and
 
 The server binds to `127.0.0.1`. Database: `data/motif.sqlite` with SQLite WAL sidecars. Use **Settings → Download workspace backup** for a consistent brand/content export while running. Keep the data folder when updating. Backup import adds new copies and preserves existing data and endpoint settings.
 
-Connector credentials are AES-256-GCM encrypted in a separate SQLite table using `data/connector.key`. JSON exports exclude connections, delivery history, credential ciphertext, and that key; re-enter credentials on another installation. A physical database backup does contain encrypted secrets: protect it and its key with normal local account/filesystem controls. Do not delete the key if you want existing connections to keep working.
+Image-provider and connector credentials are AES-256-GCM encrypted in a separate SQLite table using `data/connector.key`. JSON exports exclude connections, delivery history, credential ciphertext, and that key; re-enter credentials on another installation. A physical database backup does contain encrypted secrets: protect it and its key with normal local account/filesystem controls. Do not delete the key if you want existing connections to keep working.
 
-No app telemetry, remote fonts, automatic model downloads, or automatic cloud fallback. Selecting a CLI provider explicitly allows its configured model service, which may be cloud-hosted. Browser network is restricted to this app by Content Security Policy. Model endpoint settings accept loopback URLs only; inference redirects are rejected. A local model server must itself be configured to run locally; Motif cannot prevent a separate server from forwarding requests. Website requests and optional connector operations intentionally use the network from the server; website extraction stays local; optional CLI interpretation sends supplied excerpts to the CLI’s configured model.
+No app telemetry, remote fonts, automatic model downloads, or automatic cloud fallback. Selecting a CLI provider or Cloudflare image generation explicitly allows its configured cloud model service. Browser network is restricted to this app by Content Security Policy. Model endpoint settings accept loopback URLs only; inference redirects are rejected. A local model server must itself be configured to run locally; Motif cannot prevent a separate server from forwarding requests. Website requests and optional connector operations intentionally use the network from the server; website extraction stays local; optional CLI interpretation sends supplied excerpts to the CLI’s configured model.
 
 Quick metadata scanning intentionally contacts one public HTTP(S) page; deep analysis additionally follows permitted same-origin pages, robots/sitemap files and up to three stylesheets. It never logs into websites or runs their scripts. DNS is checked and pinned per request; private destinations, unusual ports, oversized documents, disallowed paths, and excessive redirects are refused. Active analyses are temporary jobs; review and apply a result to persist it. Restarting the server ends pending jobs.
 

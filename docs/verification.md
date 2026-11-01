@@ -1,5 +1,13 @@
 # Verification
 
+## Cloudflare and local image providers — 2026-11-01
+
+- Added independent Cloudflare Workers AI (FLUX.1 Schnell), custom local URL and authenticated Unsloth Studio options. Existing local configuration remains the default. All artwork generation/revisions use the selected provider.
+- Backend suite: 111 passed. TypeScript/syntax checks and production build passed. Image fixtures cover fixed Cloudflare routing, Bearer auth, JPEG/PNG handling, bounds, errors, models, encrypted keys, deletion/redaction, atomic settings, actual rendered generation and revisions. Missing Cloudflare keys are rejected before text inference.
+- Dedicated image-provider browser suite: 12 passed. Existing creative: 27 passed; features: 21 passed; CLI providers: 10 passed. Tests use isolated databases/provider fixtures. Tested preview without saving, persisted keys after reload, custom model dropdowns, provider isolation, full Cloudflare creative creation, failed quotas, key removal and exports. Settings visually inspected at 390px; overflow checks also passed at 768/1440px.
+- Cloudflare/Unsloth contracts checked against official docs and Unsloth route/auth source. No Cloudflare token or active Unsloth image model was available, so live image generation remains unverified. See [setup and limits](image-providers.md).
+- Restarted local app; state/compiled assets returned successfully, missing Cloudflare token was rejected before generation, and saved-data checksum remained unchanged (2 brands, 4 creations and existing settings). Read-only Unsloth model-list reachability check failed; no server was started. Code graph refreshed under ignored `graphify-out/graph.json`.
+
 ## CLI AI providers — 2026-11-01
 
 - Added opt-in Codex, Claude Code, OpenCode, Pi and OMP text providers. Existing local text/image configuration remains supported. No credentials copied into the workspace; CLI provider selection can send supplied context to its configured cloud model.
