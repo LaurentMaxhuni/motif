@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { randomUUID,randomBytes } from 'node:crypto';
@@ -39,15 +39,17 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=fals
   const server=http.createServer(async(req,res)=>{
     res.setHeader('X-Content-Type-Options','nosniff');
     res.setHeader('Referrer-Policy','no-referrer');
-    res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
     try {
       const address=server.address();const expected=`127.0.0.1:${address?.port}`;
       if (![expected,`localhost:${address?.port}`,`[::1]:${address?.port}`].includes(req.headers.host)) fail('Invalid host.',403);
       const url=new URL(req.url,`http://${expected}`); const path=url.pathname;
       if (!path.startsWith('/api/')) {
         if(req.method!=='GET') fail('Method not allowed.',405);
-        const files={'/':['public/index.html','text/html'],'/app.js':['public/app.js','text/javascript'],'/features.js':['public/features.js','text/javascript'],'/theme.js':['public/theme.js','text/javascript'],'/style.css':['public/style.css','text/css'],'/features.css':['public/features.css','text/css'],'/favicon.svg':['public/favicon.svg','image/svg+xml']};
-        if(!files[path]) fail('Not found.',404);
+        const files={'/':['dist/index.html','text/html'],'/theme.js':['public/theme.js','text/javascript'],'/favicon.svg':['public/favicon.svg','image/svg+xml']};
+        const asset=/^\/assets\/[a-zA-Z0-9_-]+\.(js|css|woff2?)$/.exec(path);
+        if(asset)files[path]=['dist'+path,asset[1]==='js'?'text/javascript':asset[1]==='css'?'text/css':'font/'+asset[1]];
+        if(!files[path]||!existsSync(join(root,files[path][0]))) fail('Not found.',404);
         res.writeHead(200,{'Content-Type':files[path][1]+'; charset=utf-8','Cache-Control':'no-cache'});res.end(readFileSync(join(root,files[path][0])));return;
       }
       if(req.headers.origin && ![`http://${expected}`,`http://localhost:${address.port}`,`http://[::1]:${address.port}`].includes(req.headers.origin)) fail('Cross-origin access denied.',403);

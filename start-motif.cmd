@@ -12,5 +12,5 @@ if not exist "node_modules\cheerio" (
   exit /b 1
 )
 echo Open http://127.0.0.1:3333 in your browser. Press Ctrl+C to stop.
-node server.js
+call npm start
 pause
