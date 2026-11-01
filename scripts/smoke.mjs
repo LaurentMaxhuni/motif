@@ -1,3 +1,4 @@
+import { selectChoice } from './browser-helpers.mjs'
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
@@ -53,7 +54,7 @@ try{
   const legacyPng=page.waitForEvent('download');await page.getByRole('button',{name:'PNG',exact:true}).click();await(await legacyPng).saveAs('output/playwright/legacy-export.png');
   const legacyBytes=readFileSync('output/playwright/legacy-export.png');assert.equal(legacyBytes.readUInt32BE(16),1080);assert.equal(legacyBytes.readUInt32BE(20),1080);checks.push('legacy SVG and 1080x1080 PNG exports');
   await page.getByRole('button',{name:'Close',exact:true}).click();
-  assert.equal(await page.getByRole('combobox',{name:'Number of variations'}).inputValue(),'1');checks.push('full AI creation defaults');
+  assert.equal(await page.getByRole('combobox',{name:'Number of variations'}).textContent(),'1 variation');checks.push('full AI creation defaults');
   await page.getByRole('button',{name:'Create content',exact:true}).click();await page.getByText(/Choose an image model/).waitFor();assert.equal(store.all('content').length,4);checks.push('missing models show errors without template fallback');
   await page.getByRole('button',{name:'Settings',exact:true}).click();
   for(const name of ['textEndpoint','imageEndpoint'])await page.locator(`#${name.replace('Endpoint','-endpoint')}`).fill(modelOrigin);
@@ -71,7 +72,7 @@ try{
   await page.getByRole('button',{name:'Undo revision',exact:true}).click();assert.equal(await page.locator('[aria-label="Generated copy"] h3').textContent(),created.headline);checks.push('undo restores previous design');
   await revise('fail');await page.getByRole('alert').filter({hasText:'invalid revision'}).waitFor();assert.equal(await page.getByLabel('Describe your changes').inputValue(),'fail');assert.equal(await page.locator('[aria-label="Generated copy"] h3').textContent(),created.headline);checks.push('failed revisions preserve preview and request');
   await page.getByLabel('Generate new artwork').check();await revise('Use new artwork and a softer design');await page.getByText('AI revision ready. Save to keep it.',{exact:true}).waitFor();assert.equal(imageRequests,2);checks.push('explicit artwork regeneration');
-  await page.locator('[name=status]').selectOption('Scheduled');await page.locator('[name=scheduledAt]').fill('2026-11-02T10:00');
+  await selectChoice(page,page.getByLabel('Status',{exact:true}),'Scheduled');await page.locator('[name=scheduledAt]').fill('2026-11-02T10:00');
   await page.screenshot({path:'output/playwright/editor-desktop.png',fullPage:true});
   const png=page.waitForEvent('download');await page.getByRole('button',{name:'PNG',exact:true}).click();const file=await png;await file.saveAs('output/playwright/creative-export.png');
   const bytes=readFileSync('output/playwright/creative-export.png');assert.equal(bytes.readUInt32BE(16),1080);assert.equal(bytes.readUInt32BE(20),1080);checks.push('1080x1080 PNG download');
@@ -81,16 +82,16 @@ try{
   assert.equal(await page.getByRole('button',{name:'Revise with AI',exact:true}).isDisabled(),true);assert.equal(await page.getByRole('button',{name:'PNG',exact:true}).isDisabled(),true);
   await intercepted;
   assert.ok(releaseSave);releaseSave();await page.waitForFunction(()=>!document.querySelector('[role=dialog]'));await page.unroute('**/api/contents/*');checks.push('saving prevents conflicting revisions and exports');
-  await page.reload();await page.getByRole('button',{name:'Edit AI campaign',exact:true}).click();assert.equal(await page.locator('[aria-label="Generated copy"] h3').textContent(),'A new perspective.');assert.equal(await page.locator('[name=status]').inputValue(),'Scheduled');checks.push('saved revision and schedule survive reload');
+  await page.reload();await page.getByRole('button',{name:'Edit AI campaign',exact:true}).click();assert.equal(await page.locator('[aria-label="Generated copy"] h3').textContent(),'A new perspective.');assert.equal(await page.getByLabel('Status',{exact:true}).textContent(),'Scheduled');checks.push('saved revision and schedule survive reload');
   await revise('delay');await page.waitForFunction(()=>document.querySelector('#revision-form')?.getAttribute('aria-busy')==='true');
   assert.equal(await page.getByRole('button',{name:'Save creation',exact:true}).isDisabled(),true);assert.equal(await page.getByRole('button',{name:'PNG',exact:true}).isDisabled(),true);
   await page.getByRole('button',{name:'Close',exact:true}).click();await page.getByRole('button',{name:'Edit AI campaign',exact:true}).click();
   const response=page.waitForResponse(r=>r.url().endsWith('/api/revise'));assert.ok(releaseRevision);releaseRevision();await response;
   await page.waitForFunction(()=>document.querySelector('#revision-form')?.getAttribute('aria-busy')==='false');
-  assert.equal(await page.getByText('Changes stay in this preview until you save.',{exact:true}).count(),1);assert.equal(await page.locator('[name=status]').inputValue(),'Scheduled');checks.push('closed and reopened editor ignores late responses');
+  assert.equal(await page.getByText('Changes stay in this preview until you save.',{exact:true}).count(),1);assert.equal(await page.getByLabel('Status',{exact:true}).textContent(),'Scheduled');checks.push('closed and reopened editor ignores late responses');
   await page.setViewportSize({width:390,height:844});assert.ok(await page.getByRole('dialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1));await page.screenshot({path:'output/playwright/hybrid-editor-mobile.png'});checks.push('mobile editor fits viewport');
   await page.getByRole('button',{name:'Close',exact:true}).click();await page.screenshot({path:'output/playwright/studio-mobile.png',fullPage:true});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));checks.push('mobile studio fits viewport');
-  await page.setViewportSize({width:1440,height:1000});await page.getByRole('button',{name:'Calendar',exact:true}).click();await page.getByRole('button',{name:'Plan my week',exact:true}).click();await page.getByLabel('Generation mode',{exact:true}).selectOption('template');await page.getByRole('button',{name:'Create my week',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('[role=dialog]'));assert.equal(store.all('content').filter(c=>c.scheduledAt).length,6);checks.push('existing weekly planning');
+  await page.setViewportSize({width:1440,height:1000});await page.getByRole('button',{name:'Calendar',exact:true}).click();await page.getByRole('button',{name:'Plan my week',exact:true}).click();await selectChoice(page,page.getByLabel('Generation mode',{exact:true}),'Design templates');await page.getByRole('button',{name:'Create my week',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('[role=dialog]'));assert.equal(store.all('content').filter(c=>c.scheduledAt).length,6);checks.push('existing weekly planning');
   await page.getByRole('button',{name:'Brand DNA',exact:true}).click();await page.getByLabel('Brand voice',{exact:true}).fill('Warm, direct, specific.');await page.getByRole('button',{name:'Save Brand DNA',exact:true}).click();await page.reload();await page.getByRole('button',{name:'Brand DNA',exact:true}).click();assert.equal(await page.getByLabel('Brand voice',{exact:true}).inputValue(),'Warm, direct, specific.');checks.push('brand persistence');
   const firstBrand=store.all('brand')[0].id;
   await page.getByRole('button',{name:'Assistant',exact:true}).click();
@@ -102,10 +103,10 @@ try{
   assert.equal(await page.getByLabel('Message to local assistant').inputValue(),'fail-chat');assert.equal(await page.getByRole('log').textContent(),priorConversation);assert.equal(chatRequests[1].filter(m=>m.role==='user').length,2);checks.push('failed assistant response preserves prompt and prior history');
   await page.getByRole('button',{name:'Add brand',exact:true}).click();await page.getByLabel('Business name',{exact:true}).fill('Another brand');await page.getByRole('button',{name:'Enter Brand DNA myself',exact:true}).click();await page.getByRole('button',{name:'Make this my Brand DNA',exact:false}).click();await page.getByRole('button',{name:'Create my first campaign',exact:false}).click();assert.equal(await page.locator('.content-card').count(),0);checks.push('brand isolation');
   const secondBrand=store.all('brand').find(b=>b.id!==firstBrand).id;
-  await page.getByRole('combobox',{name:'Active brand'}).selectOption(firstBrand);await page.getByRole('button',{name:'Assistant',exact:true}).click();
+  await selectChoice(page,page.getByRole('combobox',{name:'Active brand'}),store.get('brand',firstBrand).name);await page.getByRole('button',{name:'Assistant',exact:true}).click();
   await page.getByLabel('Message to local assistant').fill('delay-chat');await page.getByRole('button',{name:'Send',exact:true}).click();
   await page.getByText('Thinking with your local model…',{exact:true}).waitFor();await Promise.race([delayedChatStarted,new Promise((_,reject)=>setTimeout(()=>reject(new Error('Delayed chat fixture was not reached.')),15000))]);
-  await page.getByRole('combobox',{name:'Active brand'}).selectOption(secondBrand);await page.getByRole('heading',{name:'Find your next direction',exact:true}).waitFor();
+  await selectChoice(page,page.getByRole('combobox',{name:'Active brand'}),store.get('brand',secondBrand).name);await page.getByRole('heading',{name:'Find your next direction',exact:true}).waitFor();
   const chatResponse=page.waitForResponse(r=>r.url().endsWith('/api/chat'));releaseChat();await chatResponse;
   assert.equal(await page.getByRole('log').getByText('Fixture advice: delay-chat',{exact:true}).count(),0);assert.equal(await page.getByLabel('Message to local assistant').inputValue(),'');assert.equal(await page.getByRole('button',{name:'Send',exact:true}).isDisabled(),true);checks.push('assistant ignores late response after brand switch');
   await page.getByRole('button',{name:'Settings',exact:true}).click();
