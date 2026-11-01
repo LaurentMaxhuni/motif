@@ -1,0 +1,12 @@
+import { ArrowUpRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
+import { useWorkspace } from '@/lib/workspace'
+import { kinds } from '@/lib/types'
+export default function Activity(){
+  const {contents,data,edit}=useWorkspace()
+  const recent=[...contents].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||'')).slice(0,8)
+  return <div className="space-y-6"><div><h1 className="text-2xl font-semibold tracking-tight">Activity</h1><p className="mt-2 text-muted-foreground">Real workspace counts. Platform reach and engagement are not tracked.</p></div><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[['Total creations',contents.length],['Ready to share',contents.filter(c=>['Approved','Ready'].includes(c.status)).length],['Local AI creations',contents.filter(c=>c.source.startsWith('Local AI')).length],['Workspace brands',data.brands.length]].map(([label,count])=><Card key={label}><CardContent className="pt-6"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-3xl font-semibold">{count}</p></CardContent></Card>)}</div><div className="grid gap-6 lg:grid-cols-2"><Card><CardHeader><CardTitle>Content mix</CardTitle></CardHeader><CardContent className="space-y-5">{kinds.map(kind=>{const count=contents.filter(c=>c.kind===kind).length;return <div key={kind} className="space-y-2"><div className="flex justify-between text-sm"><span>{kind}</span><span>{count}</span></div><Progress aria-label={kind} value={count/Math.max(contents.length,1)*100}/></div>})}</CardContent></Card><Card><CardHeader><CardTitle>Recent work</CardTitle></CardHeader><CardContent>{recent.length?recent.map(item=><Button variant="ghost" key={item.id} onClick={()=>edit(item)} className="h-auto w-full justify-between gap-3 whitespace-normal border-b px-0 py-4 text-left"><span className="min-w-0"><span className="block truncate">{item.title}</span><span className="mt-1 block text-xs font-normal text-muted-foreground">{item.channel} · {item.updatedAt?new Date(item.updatedAt).toLocaleDateString():'Date unavailable'}</span></span><Badge variant="secondary">{item.status}</Badge><ArrowUpRight className="size-4 shrink-0"/></Button>):<p className="text-sm text-muted-foreground">No content yet. Create your first campaign in the studio.</p>}</CardContent></Card></div></div>
+}
