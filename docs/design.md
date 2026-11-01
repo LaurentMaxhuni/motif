@@ -8,7 +8,13 @@ Brand DNA (manual or optional public website scan) → studio (templates or loca
 
 Node 22.13+ server bound to 127.0.0.1, built-in SQLite for durable state, plain JavaScript frontend, local CSS and SVG illustrations. No account, telemetry, CDN, subscription, or cloud AI. OpenAI-compatible text and image endpoints accept loopback addresses only. Model inference is explicit and failures remain visible. Offline templates are labelled templates.
 
-Website scanning is the sole intentional public-network operation and fetches only the supplied public HTTP(S) document with redirect, DNS, byte, and time limits. Imported HTML never executes. Users can enter all brand details manually instead. Remote image URLs are never loaded automatically.
+Fresh workspaces begin with a guided business setup. Website analysis and manual entry converge on a review step before any brand is saved; optional local-model setup leads to the first campaign or social connections. Existing user data is preserved. Light, dark, and system appearance are browser preferences; exported artwork is independent of interface theme.
+
+Website analysis intentionally fetches public same-origin HTML, robots/sitemap files and limited CSS with redirect, DNS, byte, request and time limits. Site code never executes. Users can enter all brand details manually instead. Optional connectors contact only their official services when explicitly tested or sent content. Remote artwork is not loaded automatically by the browser.
+
+Deep analysis keeps observed wording separate from local-model interpretations, retains source evidence and warnings, and requires review before applying Brand DNA. Asynchronous jobs expose progress/cancellation without blocking the UI. Reports are schema-validated for import and bound to the displayed business when downloaded.
+
+Buffer, Metricool and Zernio connections are brand-scoped. Credentials are encrypted outside the JSON document store/export. Sending requires reviewed content and connection versions, a matching discovered account and an explicit draft/schedule choice. No automatic retries follow ambiguous outcomes. Local images are not uploaded; Buffer/Zernio require a public media URL for imagery and Metricool is text-only until its conflicting media contracts can be verified.
 
 Studio supports social posts, ads, email, SEO articles and video scripts. Original SVG layouts provide editable static creative previews and SVG/PNG downloads; local image generation and image uploads can supply artwork. A local assistant uses saved Brand DNA. Plan-a-week creates drafts, never publishes. Calendar entries remain local; performance reflects actual content counts, not fabricated reach or revenue.
 

@@ -6,7 +6,7 @@ import http from 'node:http';
 import { fixtureDesign,fixturePNG } from '../test/fixtures.js';
 
 mkdirSync('output/playwright',{recursive:true});
-const {server,store}=createApp({database:':memory:'});
+const {server,store}=createApp({database:':memory:',seed:true});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const origin=`http://127.0.0.1:${server.address().port}`;
 const modelServer=http.createServer(async(req,res)=>{let raw='';for await(const c of req)raw+=c;const body=JSON.parse(raw||'{}');res.setHeader('Content-Type','application/json');
@@ -60,8 +60,7 @@ try{
   const hybridPng=page.waitForEvent('download');await page.getByRole('button',{name:'PNG',exact:true}).click();await (await hybridPng).saveAs('output/playwright/hybrid-export.png');
   await page.getByRole('button',{name:'Save creation',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('dialog').open);
   await page.reload();await page.locator('.preview-button').first().click();assert.equal(await page.locator('[name=headline]').inputValue(),'A new perspective.');assert.ok(await page.locator('[name=designHTML]').inputValue());await page.getByRole('button',{name:'Close dialog',exact:true}).click();
-  await page.getByRole('button',{name:'Add brand',exact:true}).click();await page.locator('#new-brand-form [name=name]').fill('Another brand');await page.getByRole('button',{name:'Create brand',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('dialog').open);
-  await page.getByRole('button',{name:'Creative studio',exact:true}).click();assert.equal(await page.locator('.content-card').count(),0);
+  await page.getByRole('button',{name:'Add brand',exact:true}).click();await page.locator('[data-feature="onboarding-start"] [name=name]').fill('Another brand');await page.getByRole('button',{name:'Enter Brand DNA myself',exact:true}).click();await page.getByRole('button',{name:'Make this my Brand DNA',exact:false}).click();await page.getByRole('button',{name:'Create my first campaign',exact:false}).click();assert.equal(await page.locator('.content-card').count(),0);
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
   writeFileSync('output/playwright/result.json',JSON.stringify({passed:true,checks:['template generation','editing','literal HTML escaped','schedule','PNG download','reload persistence','weekly planning','brand edit','settings','brand isolation','mobile overflow','no external requests','no browser errors','hybrid model generation','HTML/CSS editor','composition rerender','standalone HTML export','hybrid PNG export','hybrid edit persistence'],errors,external},null,2));
   console.log('Browser smoke passed: 19 workflow checks. Screenshots in output/playwright/.');
