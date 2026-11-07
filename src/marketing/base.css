@@ -1,0 +1,8 @@
+/* Hallmark scaffold, scoped to public pages to preserve workspace styling. */
+html, body { overflow-x: clip; }
+.marketing *, .marketing *::before, .marketing *::after { box-sizing: border-box; }
+.marketing img { max-width: 100%; }
+.marketing svg { display: block; flex-shrink: 0; }
+.marketing h1, .marketing h2, .marketing h3, .marketing p { margin: 0; }
+.marketing ::selection { background: var(--color-accent); color: var(--color-accent-ink); }
+.marketing { scrollbar-color: var(--color-muted) var(--color-paper); caret-color: var(--color-ink); }

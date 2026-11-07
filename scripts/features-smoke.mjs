@@ -28,7 +28,7 @@ async function navigate(name){
 }
 async function noOverflow(){if(!await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))failures.push(await page.evaluate(()=>({issue:'page overflows viewport',width:innerWidth,scrollWidth:document.documentElement.scrollWidth,elements:[...document.querySelectorAll('main *')].filter(el=>el.getBoundingClientRect().right>innerWidth).slice(0,8).map(el=>({tag:el.tagName,text:el.textContent.slice(0,100),className:el.className}))})));}
 try{
-  await page.goto(origin);await page.getByRole('heading',{name:'Good marketing starts with knowing you.',exact:false}).waitFor();await page.screenshot({path:'output/playwright/onboarding-desktop.png',fullPage:true});
+  await page.goto(origin+'/app');await page.getByRole('heading',{name:'Good marketing starts with knowing you.',exact:false}).waitFor();await page.screenshot({path:'output/playwright/onboarding-desktop.png',fullPage:true});
   assert.equal(store.all('brand').length,0);
   await page.getByLabel('Business name',{exact:true}).fill('Northline');await page.getByLabel('Public website',{exact:true}).fill(site);await page.getByRole('button',{name:'Analyze website',exact:true}).click();await page.getByRole('heading',{name:'Make this brand your own.',exact:true}).waitFor();assert.equal(store.all('brand').length,0);
   assert.ok(await page.getByLabel('Your story',{exact:true}).inputValue());await page.getByText('Visual Identity',{exact:false}).first().waitFor();

@@ -19,7 +19,7 @@ const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[],
 page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(base)&&!request.url().startsWith('data:')&&!request.url().startsWith('blob:'))external.push(request.url())});
 page.setDefaultTimeout(12000);mkdirSync('output/playwright',{recursive:true});
 try{
-  await page.goto(base);await page.getByRole('button',{name:'Settings',exact:true}).click();
+  await page.goto(base+'/app');await page.getByRole('button',{name:'Settings',exact:true}).click();
   for(let i=0;i<ids.length;i++){
     await selectChoice(page,page.getByLabel('Text AI provider',{exact:true}),names[i]+' CLI');
     assert.equal(await page.getByLabel('CLI model override').inputValue(),'fixture/'+ids[i]);

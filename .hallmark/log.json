@@ -1,0 +1,42 @@
+[
+ {
+  "shape": "Product-led FAQ",
+  "theme": "riso",
+  "axes": "light/grotesk-heavy/chromatic-pink",
+  "hero": "Counter",
+  "nav": "edge-aligned",
+  "footer": "letter close",
+  "imagery": "real product captures from synthetic in-memory examples",
+  "photos": [],
+  "entry": "src/marketing/Marketing.tsx",
+  "fingerprint": [
+   "product-led FAQ",
+   "counter",
+   "edge-aligned",
+   "letter close",
+   "product captures",
+   "showcase/rows/band/disclosures"
+  ],
+  "sections": [
+   "Creative previews",
+   "Brand DNA",
+   "Brief/revise/export workflow",
+   "Open source",
+   "FAQ",
+   "Open studio",
+   "Footer"
+  ],
+  "signature": "The real sample creative workspace, with complete desktop previews and dedicated mobile captures",
+  "waived": [],
+  "adaptations": [
+   "Bricolage Grotesque replaces Cabinet Grotesk for OFL redistribution",
+   "Flat digital surfaces omit Riso print texture",
+   "Product-led sections precede the FAQ",
+   "Privacy uses long-document audit scope"
+  ],
+  "prompt": "Motif landing page, privacy policy, open source, new design system using Hallmark and Anti-AI Slop",
+  "sweep": "Landing: 0 FAIL, 0 REFLEX, 1 answered WARN (82 words). Privacy: 0 FAIL, 0 REFLEX, 0 WARN. Independent hero and finish review fixes resolved.",
+  "date": "2026-11-07",
+  "mode": "build"
+ }
+]

@@ -42,7 +42,7 @@ await page.addInitScript(()=>document.addEventListener('securitypolicyviolation'
 page.on('request',req=>{if(!req.url().startsWith(origin)&&!req.url().startsWith('data:')&&!req.url().startsWith('blob:'))external.push(req.url());});
 const revise=async instruction=>{await page.getByLabel('Describe your changes').fill(instruction);await page.getByRole('button',{name:'Revise with AI',exact:true}).click();};
 try{
-  await page.goto(origin);await page.getByRole('heading',{name:'What will you create next?'}).waitFor();
+  await page.goto(origin+'/app');await page.getByRole('heading',{name:'What will you create next?'}).waitFor();
   assert.equal(await page.locator('.content-card').count(),4);
   const legacyCard=page.locator('.content-card').filter({has:page.locator('.preview-button svg')}).first();
   const dimensions=await legacyCard.evaluate(card=>{const button=card.querySelector('.preview-button').getBoundingClientRect(),svg=card.querySelector('svg').getBoundingClientRect();return {button:button.width,width:svg.width,height:svg.height};});

@@ -10,7 +10,7 @@ Requires **Node.js 22.13+**. Dependencies are already installed in this checkout
 npm start
 ```
 
-Open **http://127.0.0.1:3333**. Or double-click `start-motif.cmd`. To choose another port in PowerShell: `$env:PORT=3334; npm start`.
+Open **http://127.0.0.1:3333** for the landing page, **http://127.0.0.1:3333/app** for the studio, or **http://127.0.0.1:3333/privacy** for the privacy policy. Or double-click `start-motif.cmd`. To choose another port in PowerShell: `$env:PORT=3334; npm start`.
 
 For a fresh checkout, first run `npm ci`. `npm start` typechecks and builds the React frontend before starting the local server. Internet is needed to install dependencies and to use cloud-backed CLI providers. Local templates and configured local models can work offline.
 
@@ -114,6 +114,8 @@ Calendar dates alone remain local reminders. External delivery happens only thro
 
 ## Verify
 
+Public pages are rendered to static HTML during the build and hydrated by React. They remain readable without JavaScript and never load workspace data. Their visual system is documented in [docs/marketing-design.md](docs/marketing-design.md). The privacy text is a factual template for the local app, not legal advice or a policy for an independently hosted service.
+
 ```powershell
 npm run check
 npm run build
@@ -122,8 +124,13 @@ node scripts/smoke.mjs
 node scripts/features-smoke.mjs
 node scripts/navigation-smoke.mjs
 node scripts/select-smoke.mjs
+node scripts/landing-smoke.mjs
 ```
 
 Build before running tests. Backend tests cover local AI contracts, rendering, atomic failures, persistence, backups, scheduling, network boundaries and compiled-asset allowlists. Browser suites use installed Chrome and isolated in-memory databases to verify AI creation/revision/undo/export, approvals, planning, onboarding, research, themes, connector review/delivery and responsive keyboard navigation. Set `CHROME_PATH` to override the executable. Screenshots and results are written under `output/playwright/` (Git-ignored). Model and provider responses are deterministic fixtures; actual model quality and live platform acceptance remain unverified.
 
 Node 22 may print an experimental warning for its built-in SQLite module. This is expected.
+
+## License
+
+Motif code is [MIT licensed](LICENSE). Bundled Bricolage Grotesque and Literata fonts retain their SIL Open Font Licenses in `src/marketing/assets`. Dependencies retain their respective licenses. Public product captures use synthetic sample data, not personal workspaces.

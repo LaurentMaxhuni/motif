@@ -7,7 +7,7 @@ const {server,store}=createApp({database:':memory:',seed:true});store.save('work
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`
 const page=await browser.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(8000)
 try{
-  await page.goto(base);await page.getByLabel('Business name',{exact:true}).fill('Abandoned brand')
+  await page.goto(base+'/app');await page.getByLabel('Business name',{exact:true}).fill('Abandoned brand')
   await page.getByRole('button',{name:'Add brand',exact:true}).click();assert.equal(await page.getByLabel('Business name',{exact:true}).inputValue(),'','Add brand must reset mounted onboarding')
   let releaseStudio;const intercepted=new Promise(resolve=>{void page.route('**/assets/Studio-*.js',async route=>{await new Promise(r=>{releaseStudio=r;resolve()});await route.continue()})})
   await page.getByRole('button',{name:'Calendar',exact:true}).click();await page.getByRole('heading',{name:'Content calendar',exact:true}).waitFor()

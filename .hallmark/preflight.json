@@ -1,0 +1,16 @@
+{
+  "scanned": "2026-11-06",
+  "findings": {
+    "framework": "React 19, TypeScript, Vite, Tailwind; package.json",
+    "entry": "src/main.tsx originally mounted the workspace at /",
+    "routing": "server.js explicitly allowlists compiled documents and assets",
+    "fonts": "src/index.css used an Inter/Segoe UI fallback; no bundled fonts",
+    "palette": "src/index.css uses neutral OKLCH workspace tokens",
+    "design": "docs/design.md describes the inherited workspace; user requested a new public design system",
+    "material": "Runnable local product, seeded example brand and templates, public GitHub repository",
+    "license": "No license file before this run; user delegated license choice and MIT was selected"
+  },
+  "preserve": ["Existing app and provider workflows", "User data and credentials", "Explicit static asset allowlist", "Existing dependencies"],
+  "introduce": ["Landing page", "Local-app privacy policy", "Public-page tokens and typography", "MIT license", "Static prerendering", "Sample-only product captures"],
+  "inferred": "Small brands and independent creators; try the local studio; graphic editorial tone; real product captures supply the material. User delegated design choices."
+}
