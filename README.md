@@ -134,3 +134,7 @@ Node 22 may print an experimental warning for its built-in SQLite module. This i
 ## License
 
 Motif code is [MIT licensed](LICENSE). Bundled Instrument Sans and DM Mono retain their SIL Open Font Licenses in `src/marketing/assets`. Dependencies retain their respective licenses. Public product captures use synthetic sample data, not personal workspaces.
+
+### Public search configuration
+
+Set SITE_URL to the production HTTPS origin before building. This enables canonical URLs, indexable public pages, and the sitemap. Without it, local builds remain noindex and robots.txt disallows crawling. The studio remains noindex. Deploy publicly before submitting the sitemap to search engines.
