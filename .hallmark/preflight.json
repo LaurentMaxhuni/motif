@@ -1,16 +1,17 @@
 {
-  "scanned": "2026-11-06",
+  "scanned": "2026-11-07",
   "findings": {
-    "framework": "React 19, TypeScript, Vite, Tailwind; package.json",
-    "entry": "src/main.tsx originally mounted the workspace at /",
-    "routing": "server.js explicitly allowlists compiled documents and assets",
-    "fonts": "src/index.css used an Inter/Segoe UI fallback; no bundled fonts",
-    "palette": "src/index.css uses neutral OKLCH workspace tokens",
-    "design": "docs/design.md describes the inherited workspace; user requested a new public design system",
-    "material": "Runnable local product, seeded example brand and templates, public GitHub repository",
-    "license": "No license file before this run; user delegated license choice and MIT was selected"
+    "framework": "React, TypeScript, Vite, Tailwind; package.json",
+    "entry": "src/main.tsx:6 separates the workspace and public dynamic imports",
+    "routing": "server.js:51 explicitly allowlists public documents and compiled assets",
+    "fonts": "src/marketing/marketing.css bundles Instrument Sans 400/500 and DM Mono 400",
+    "palette": "src/marketing/tokens.css:1 declares the new public charcoal and cream palette",
+    "design": "User explicitly replaced the earlier design with an AppLlama reference; design.md now records that replacement",
+    "material": "Original Motif-rendered campaigns and actual in-memory app captures; scripts/capture-campaigns.mjs",
+    "license": "MIT already chosen with user authorization; LICENSE and package.json"
   },
-  "preserve": ["Existing app and provider workflows", "User data and credentials", "Explicit static asset allowlist", "Existing dependencies"],
-  "introduce": ["Landing page", "Local-app privacy policy", "Public-page tokens and typography", "MIT license", "Static prerendering", "Sample-only product captures"],
-  "inferred": "Small brands and independent creators; try the local studio; graphic editorial tone; real product captures supply the material. User delegated design choices."
+  "preserve": ["Studio and provider workflows", "User data and credentials", "Explicit static allowlist", "Privacy practices", "MIT license and source destinations"],
+  "introduce": ["AppLlama-informed public design system", "Original campaign work", "Self-hosted Instrument Sans and DM Mono", "Responsive campaign rail", "Public-only style loading"],
+  "reference": "https://appllama.io/",
+  "inferred": "Independent brands and creators; try the local studio. User delegated design choices and requested the reference after rejecting prior work."
 }

@@ -1,17 +1,18 @@
 # Motif public website
 
-Applies to `/` and `/privacy`, not the creative studio at `/app`.
+Applies to `/` and `/privacy`. The studio at `/app` keeps its own interface.
 
-The user rejected the initial colorful editorial treatment and requested a complete restart: restrained and product-focused. This is the public design system for subsequent work.
+The current direction follows the user's explicit AppLlama reference, replacing the previous neutral compact system. Borrow its charcoal ground, warm cream controls, broad sans typography, and generous product presentation. Do not copy its assets, copy, floating app-icon composition, or effects.
 
-- Neutral near-white canvas, charcoal ink and controls, subtle gray rules. Color is not decoration.
-- IBM Plex Sans, locally hosted under the SIL Open Font License. Weights 400, 500, and 600. One family throughout.
-- Headline cap 56px, section heads 32px, body 16px, supporting labels 14px. Clear hierarchy without poster-scale type.
-- One centered 1200px container including 40px desktop gutters; 24px tablet and 20px phone gutters.
-- Section spacing generally 64–96px. Compact closing and footer bands use 40px. Do not add empty height to satisfy marketing-template proportions.
-- Controls use 5px corners; product surfaces use 6px. No pills, gradients, decorative texture, glow, or ornamental icon tiles.
-- Lead with a readable capture of the actual brief composer. The workflow changes between real brand, brief, and creative views through native radio controls. Sample data is explicitly identified.
-- Use one primary action style and native disclosures. Focus appears immediately. Hover changes color; pressed links move 1px. Reduced motion removes that movement and shortens transitions.
-- Keep privacy explanations factual and readable. Preserve data practices, explicit provider choices, the MIT license, and source links.
+- Instrument Sans 400/500, locally hosted. DM Mono 400 only for executable setup commands. Both retain OFL notices.
+- Charcoal `#171716`, raised ground `#20201f`, off-white `#f5f3ee`, muted `#b7b1a9`, cream action `#ead6c0`. Declare colors and fonts in `tokens.css`.
+- One centered container, capped at 1280px. Desktop gutters 80px, tablet 48px, phone 24px. One 24px column gap.
+- Centered hero: category, audience, actual 1080 × 1080 export size, primary action, and original Motif campaigns. Headline scales 40–72px. Section heads scale 32–48px.
+- One main idea per screen: campaign gallery, real workspace, brand and revision context, open-source setup, closing wordmark. Workflow stacks across two phone screens. Long privacy copy flows naturally.
+- Original campaign artwork is material, never proof of a provider's quality. Actual application captures come from an isolated in-memory workspace. Live brand and revision context shows factual inputs; it must never imply a provider call or completed revision.
+- Cream primary and outlined secondary actions. Use the supplied Taste motion layer for hover, press, and reduced motion. No scroll reveals, shader, orbital decoration, or looping effects.
+- Phone gallery scrolls horizontally within its frame. Navigation opens a full-screen sheet, closes on a destination or Escape, and returns focus to its toggle on Escape.
+- Public pages are prerendered and readable without scripts. Public styles load only on public routes. No analytics, remote font requests, or workspace API requests.
+- Keep privacy practices, MIT license, source links, and provider costs explicit. Do not invent customers, metrics, testimonials, or claims about generation quality.
 
-The page deliberately departs from Hallmark's poster-scale section headings, full-screen hero, and large-gap defaults. These are documented Reflex exceptions justified by the user's explicit direction. The neutral ink is also the control color; an accent-pixel heuristic must not cause arbitrary color changes. Accessibility, factual claims, keyboard access, responsive behavior, and safe data boundaries remain required.
+Taste's dealt centered hero and Instrument pairing are retained; the explicit user reference overrides its dealt green palette. Hallmark's actual-product capture rule takes precedence over inventing a live application mock. Original campaigns replace a decorative effect.

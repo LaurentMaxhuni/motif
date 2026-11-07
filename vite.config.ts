@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   publicDir: false,
+  build: { manifest: true },
   server: {
     host: '127.0.0.1',
     proxy: Object.fromEntries(['/api','/theme.js','/favicon.svg'].map(path => [path, {

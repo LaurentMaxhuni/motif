@@ -50,8 +50,8 @@ export function createApp({ database=join(root,'data','motif.sqlite'), seed=fals
       if (!path.startsWith('/api/')) {
         if(req.method!=='GET') fail('Method not allowed.',405);
         const files={'/':['dist/index.html','text/html'],'/app':['dist/app/index.html','text/html'],'/app/':['dist/app/index.html','text/html'],'/privacy':['dist/privacy/index.html','text/html'],'/privacy/':['dist/privacy/index.html','text/html'],'/theme.js':['public/theme.js','text/javascript'],'/favicon.svg':['public/favicon.svg','image/svg+xml']};
-        const asset=/^\/assets\/[a-zA-Z0-9_-]+\.(js|css|woff2?|png)$/.exec(path);
-        if(asset)files[path]=['dist'+path,asset[1]==='js'?'text/javascript':asset[1]==='css'?'text/css':asset[1]==='png'?'image/png':'font/'+asset[1]];
+        const asset=/^\/assets\/[a-zA-Z0-9_-]+\.(js|css|woff2?|png|jpg)$/.exec(path);
+        if(asset)files[path]=['dist'+path,asset[1]==='js'?'text/javascript':asset[1]==='css'?'text/css':asset[1]==='png'?'image/png':asset[1]==='jpg'?'image/jpeg':'font/'+asset[1]];
         if(!files[path]||!existsSync(join(root,files[path][0]))) fail('Not found.',404);
         res.writeHead(200,{'Content-Type':files[path][1]+'; charset=utf-8','Cache-Control':'no-cache'});res.end(readFileSync(join(root,files[path][0])));return;
       }

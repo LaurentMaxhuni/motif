@@ -20,7 +20,7 @@ test('public pages ship real HTML and workspace routing stays explicitly allowli
   const base=`http://127.0.0.1:${server.address().port}`;
   try{
     const landing=await (await fetch(base)).text();
-    assert.match(landing,/<h1[^>]*>Your local/);
+    assert.match(landing,/<h1[^>]*>AI creatives for/);
     assert.match(landing,/href="\/app"/);
     assert.match(landing,/href="\/privacy"/);
     assert.match(landing,/MIT licensed/);
@@ -32,8 +32,8 @@ test('public pages ship real HTML and workspace routing stays explicitly allowli
       const res=await fetch(base+route);assert.equal(res.status,200);
       const html=await res.text();assert.match(html,/<title>Motif — AI creative workspace/);assert.match(html,/<div id="root"><\/div>/);
     }
-    for(const path of new Set([...landing.matchAll(/(?:src|srcSet)="(\/assets\/[^" ]+\.png)"/g)].map(match=>match[1]))){
-      const res=await fetch(base+path);assert.equal(res.status,200,path);assert.match(res.headers.get('content-type'),/^image\/png/);
+    for(const path of new Set([...landing.matchAll(/(?:src|srcSet)="(\/assets\/[^" ]+\.(?:jpg|png))"/g)].map(match=>match[1]))){
+      const res=await fetch(base+path);assert.equal(res.status,200,path);assert.match(res.headers.get('content-type'),/^image\/(?:jpeg|png)/);
     }
     for(const route of ['/privacy/source','/app/settings','/LICENSE','/assets/../../LICENSE','/src/marketing/assets/brand.png'])assert.equal((await fetch(base+route)).status,404,route);
     assert.deepEqual(store.all('brand'),[],'reading public pages cannot create a brand');

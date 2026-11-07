@@ -7,6 +7,8 @@ import { resolve } from 'node:path'
 await build({ build: { ssr: 'src/marketing/render.tsx', outDir: 'output/marketing-ssr', emptyOutDir: true } })
 const { render } = await import(pathToFileURL(resolve('output/marketing-ssr/render.js')).href)
 const template = readFileSync('dist/index.html', 'utf8')
+const manifest = JSON.parse(readFileSync('dist/.vite/manifest.json', 'utf8'))
+const publicCSS = manifest['src/marketing/Marketing.tsx']?.css || []
 for (const [path, title, description, content] of [
   ['', 'Motif — Your local AI creative studio', 'Turn brand briefs into AI-made creatives. An open-source, local-first creative studio. Bring your models, keep your workspace.', render(false)],
   ['privacy', 'Privacy policy — Motif', 'How the local Motif app stores your workspace and handles optional AI providers, website analysis, and social connections.', render(true)],
@@ -14,9 +16,14 @@ for (const [path, title, description, content] of [
 ]) {
   const folder = path ? `dist/${path}` : 'dist'
   mkdirSync(folder, { recursive: true })
-  const html = template.replace(/<title>.*?<\/title>/, `<title>${title}</title>`)
+  let html = template.replace(/<title>.*?<\/title>/, `<title>${title}</title>`)
     .replace(/<meta name="description" content="[^"]*"\s*\/>/, `<meta name="description" content="${description}"/>`)
     .replace('<div id="root"></div>', () => `<div id="root">${content}</div>`)
+  if (path !== 'app') {
+    html = html.replace('<html lang="en">', '<html lang="en" data-type="software" data-radius="soft" data-buttons="solid" data-motion="on">')
+      .replace('</head>', publicCSS.map(file => `<link rel="stylesheet" href="/${file}"/>`).join('') + '<meta name="page-type" content="software"/><meta name="site-kind" content="software"/></head>')
+      .replace('content="#f8fafc"', 'content="#171716"')
+  }
   writeFileSync(`${folder}/index.html`, html)
 }
 console.log('Prerendered landing and privacy pages; emitted workspace entry.')

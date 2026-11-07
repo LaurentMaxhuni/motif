@@ -133,4 +133,4 @@ Node 22 may print an experimental warning for its built-in SQLite module. This i
 
 ## License
 
-Motif code is [MIT licensed](LICENSE). Bundled IBM Plex Sans retains its SIL Open Font License in `src/marketing/assets`. Dependencies retain their respective licenses. Public product captures use synthetic sample data, not personal workspaces.
+Motif code is [MIT licensed](LICENSE). Bundled Instrument Sans and DM Mono retain their SIL Open Font Licenses in `src/marketing/assets`. Dependencies retain their respective licenses. Public product captures use synthetic sample data, not personal workspaces.
