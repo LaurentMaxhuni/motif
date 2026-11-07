@@ -20,7 +20,7 @@ test('public pages ship real HTML and workspace routing stays explicitly allowli
   const base=`http://127.0.0.1:${server.address().port}`;
   try{
     const landing=await (await fetch(base)).text();
-    assert.match(landing,/<h1[^>]*>Your next campaign/);
+    assert.match(landing,/<h1[^>]*>Your local/);
     assert.match(landing,/href="\/app"/);
     assert.match(landing,/href="\/privacy"/);
     assert.match(landing,/MIT licensed/);

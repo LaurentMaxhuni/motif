@@ -1,5 +1,52 @@
 [
  {
+  "mode": "redesign",
+  "depth": "full",
+  "scope": "site",
+  "shape": "Product walkthrough",
+  "theme": "cobalt",
+  "axes": "light/grotesk-sans/neutral",
+  "hero": "Banner",
+  "nav": "compact edge-aligned",
+  "footer": "compact legal row",
+  "imagery": "real brief composer, brand context and example creative captures",
+  "photos": [],
+  "entry": "src/marketing/Marketing.tsx",
+  "fingerprint": [
+   "product walkthrough",
+   "banner",
+   "compact edge-aligned",
+   "legal row",
+   "real studio",
+   "native radios/source/FAQ"
+  ],
+  "sections": [
+   "Brief composer",
+   "Native-radio walkthrough",
+   "Workspace ownership",
+   "Setup questions",
+   "Open studio",
+   "Legal footer"
+  ],
+  "signature": "The actual brief composer and a selectable native-radio product walkthrough",
+  "waived": [
+   "23 neutral ink shares the control color",
+   "44c compact Banner hero",
+   "59 compact closing gap",
+   "77 compact action band",
+   "78 user requested quieter 32px section heads"
+  ],
+  "adaptations": [
+   "User explicitly rejected the colorful editorial design",
+   "Single IBM Plex Sans family and neutral controls",
+   "No decorative ASCII, keycaps or texture",
+   "Privacy uses document-appropriate audit scope"
+  ],
+  "prompt": "Everything—start over, restrained and product-focused",
+  "review": "Fresh visual review: three findings resolved; distinct default view, visible native radio controls, non-wrapping secondary action.",
+  "date": "2026-11-07"
+ },
+ {
   "shape": "Product-led FAQ",
   "theme": "riso",
   "axes": "light/grotesk-heavy/chromatic-pink",
