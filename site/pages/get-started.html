@@ -1,0 +1,125 @@
+<!--page {"title": "Get started · Motif", "description": "Install Motif, start your local studio, set up your first brand and connect a text and image model.", "nav": "start"}-->
+<section class="page-hero">
+  <div class="wrap">
+    <p class="eyebrow">Get started</p>
+    <h1 class="h1">Your studio, <em>running in minutes.</em></h1>
+    <p class="lede">Motif runs as a local web app. Install it once, start it whenever you want to work, and open it in your browser at <code>127.0.0.1</code>.</p>
+  </div>
+</section>
+
+<div class="wrap docs">
+  <aside class="toc" aria-label="On this page">
+    <p>On this page</p>
+    <a href="#requirements">Requirements</a>
+    <a href="#install">Install &amp; run</a>
+    <a href="#first-run">Your first brand</a>
+    <a href="#models">Connect a model</a>
+    <a href="#first-campaign">Your first campaign</a>
+    <a href="#updating">Updating</a>
+    <a href="#troubleshooting">Troubleshooting</a>
+  </aside>
+
+  <article class="prose">
+    <h2 id="requirements">Requirements</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>You need</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><b>Node.js 22.13+</b></td><td>Runs the local server, which uses Node's built-in SQLite and TypeScript support.</td></tr>
+          <tr><td><b>pnpm</b></td><td>Installs dependencies from the lockfile.</td></tr>
+          <tr><td><b>Chrome, Chromium or Edge</b></td><td>Renders finished creatives in an isolated local browser. Detected automatically on Windows, macOS and common Linux paths.</td></tr>
+          <tr><td><b>A text and image model</b> <span class="muted">(optional)</span></td><td>Needed for AI generation. Offline templates work without one.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>You need an internet connection to install dependencies. After that, Motif works offline with templates and any local models you run.</p>
+
+    <h2 id="install">Install &amp; run</h2>
+    <ol class="numbered">
+      <li><div>
+        <h3>Get the code</h3>
+        <p>Clone the repository, or download it and unzip it somewhere you'll keep it.</p>
+        <div class="terminal">
+          <div class="terminal-bar"><span>terminal</span><button class="copy-btn" type="button" data-copy="cmd-clone"><svg aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div>
+<pre id="cmd-clone"><span class="p">$ </span><span data-cmd>git clone https://github.com/LaurentMaxhuni/motif.git</span>
+<span class="p">$ </span><span data-cmd>cd motif</span></pre>
+        </div>
+      </div></li>
+      <li><div>
+        <h3>Install dependencies</h3>
+        <div class="terminal">
+          <div class="terminal-bar"><span>~/motif</span><button class="copy-btn" type="button" data-copy="cmd-install"><svg aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div>
+<pre id="cmd-install"><span class="p">$ </span><span data-cmd>pnpm install --frozen-lockfile</span></pre>
+        </div>
+      </div></li>
+      <li><div>
+        <h3>Start Motif</h3>
+        <p><code>pnpm start</code> type-checks and builds the interface, then starts the local server. On Windows you can double-click <code>start-motif.cmd</code> instead.</p>
+        <div class="terminal">
+          <div class="terminal-bar"><span>~/motif</span><button class="copy-btn" type="button" data-copy="cmd-start"><svg aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div>
+<pre id="cmd-start"><span class="p">$ </span><span data-cmd>pnpm start</span></pre>
+        </div>
+      </div></li>
+      <li><div>
+        <h3>Open your studio</h3>
+        <p>Go to <a href="http://127.0.0.1:3333">http://127.0.0.1:3333</a>. Keep the terminal open while you work, and press <kbd>Ctrl</kbd>+<kbd>C</kbd> to stop.</p>
+      </div></li>
+    </ol>
+
+    <h2 id="first-run">Your first brand</h2>
+    <p>A fresh install opens on guided setup. You can start in one of two ways:</p>
+    <ul>
+      <li><b>Analyze your website.</b> Enter your site's address and choose how many pages to read. Motif drafts your Brand DNA with sources for every finding.</li>
+      <li><b>Enter it yourself.</b> Write your brand's name, products, audience, voice and colours by hand.</li>
+    </ul>
+    <p>Either way, you review the details before anything is saved. To add another business later, use <b>Add brand</b>.</p>
+    <div class="callout"><p><b>Tip:</b> if your site redirects between <code>www</code> and the bare domain, enter the final address. Sites that only render with JavaScript may need some details filled in by hand.</p></div>
+
+    <h2 id="models">Connect a model</h2>
+    <p>Open <b>Settings → AI providers</b>. Motif doesn't start a model or download weights, so start your model server first.</p>
+    <h3>Local text server</h3>
+    <p>Enter the base URL and the exact model ID you have installed, then save. <b>Detect text models</b> can list the models your server offers.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Server</th><th>Base URL</th></tr></thead>
+        <tbody>
+          <tr><td>Ollama</td><td><code>http://127.0.0.1:11434/v1</code></td></tr>
+          <tr><td>LM Studio</td><td><code>http://127.0.0.1:1234/v1</code></td></tr>
+          <tr><td>llama.cpp / Unsloth</td><td>Your server's loopback port plus <code>/v1</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The model needs to support JSON-object output on <code>/chat/completions</code>.</p>
+    <h3>Coding CLI</h3>
+    <p>Already use Claude Code, Codex, OpenCode, Pi or OMP? Install it and sign in from your terminal first. Then pick it as your <b>Text AI provider</b>, run <b>Detect installed CLIs</b>, then <b>Test selected CLI</b>, then save. These CLIs may send prompts to their own cloud service. See <a href="privacy.html#network">what uses the network</a>.</p>
+    <h3>Images</h3>
+    <p>Choose Cloudflare Workers AI (FLUX.1 Schnell), Unsloth Studio, or any local OpenAI-compatible <code>/images/generations</code> URL. Image keys are stored encrypted.</p>
+
+    <h2 id="first-campaign">Your first campaign</h2>
+    <ol>
+      <li>Open <b>Creative studio</b>, pick a format, and write a short brief.</li>
+      <li>Start with <b>1 variation</b>. Larger batches generate artwork one at a time and can take several minutes.</li>
+      <li>Open the result and describe any change, then click <b>Revise with AI</b>.</li>
+      <li>Click <b>Save creation</b>, approve it, then download a <b>PNG</b> or put it on the calendar.</li>
+    </ol>
+
+    <h2 id="updating">Updating</h2>
+    <p>Pull the latest code, run <code>pnpm install --frozen-lockfile</code> again, then <code>pnpm start</code>. Keep the <code>data</code> folder: it holds your workspace database and the key that unlocks your saved credentials. Existing databases and backups load directly.</p>
+
+    <h2 id="troubleshooting">Troubleshooting</h2>
+    <h3>Port 3333 is already in use</h3>
+    <p>Choose another port before starting. In PowerShell:</p>
+    <div class="terminal">
+      <div class="terminal-bar"><span>PowerShell</span><button class="copy-btn" type="button" data-copy="cmd-port"><svg aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button></div>
+<pre id="cmd-port"><span class="p">&gt; </span><span data-cmd>$env:PORT=3334; pnpm start</span></pre>
+    </div>
+    <p>On macOS or Linux, use <code>PORT=3334 pnpm start</code>.</p>
+    <h3>Creatives won't render</h3>
+    <p>Motif needs Chrome, Chromium or Edge. If yours is installed somewhere unusual, set <code>CHROME_PATH</code> to the browser's executable before starting.</p>
+    <h3>A model returns an error</h3>
+    <p>Motif shows the error rather than quietly using a template. Check that the model server is running, the model ID matches exactly, and that the model can return JSON. For CLIs, run <b>Test selected CLI</b> to check the sign-in.</p>
+    <h3>“Dependencies missing” from the Windows launcher</h3>
+    <p>Run <code>pnpm install --frozen-lockfile</code> in the Motif folder once, then double-click <code>start-motif.cmd</code> again.</p>
+    <p style="margin-top:1rem"><a class="link-arrow" href="faq.html">More questions in the FAQ <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></p>
+  </article>
+</div>

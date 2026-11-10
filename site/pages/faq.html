@@ -1,0 +1,126 @@
+<!--page {"title": "FAQ · Motif", "description": "Answers to common questions about Motif: what it is, which models it works with, privacy, publishing and setup.", "nav": "faq"}-->
+<section class="page-hero">
+  <div class="wrap">
+    <p class="eyebrow">FAQ</p>
+    <h1 class="h1">Good questions, <em>straight answers.</em></h1>
+    <p class="lede">Can't find what you need? The <a class="link-arrow" style="display:inline" href="get-started.html">setup guide</a> covers installation and troubleshooting in more detail.</p>
+  </div>
+</section>
+
+<div class="wrap">
+  <section class="faq-group">
+    <h2>The basics</h2>
+    <div class="faq-list">
+      <details open>
+        <summary>What is Motif?</summary>
+        <div class="answer"><p>A brand and marketing studio that runs on your computer. It researches your website to build a Brand DNA, then writes and designs social posts, ads, emails, SEO articles and video scripts in your voice, with the AI models you choose.</p></div>
+      </details>
+      <details>
+        <summary>Who is it for?</summary>
+        <div class="answer"><p>Small brands, founders and freelancers who make their own marketing, and anyone looking after several businesses. It's especially useful if you'd rather not upload your brand, drafts and credentials to another online service.</p></div>
+      </details>
+      <details>
+        <summary>Do I need an account?</summary>
+        <div class="answer"><p>No. There's no Motif account and no sign-in. You install it, start it, and open it in your browser.</p></div>
+      </details>
+      <details>
+        <summary>Does it work offline?</summary>
+        <div class="answer"><p>Yes, once it's installed. Offline templates and local models work without the internet. Website analysis, cloud models and social connections need a connection, because they talk to those services.</p></div>
+      </details>
+      <details>
+        <summary>Which operating systems are supported?</summary>
+        <div class="answer"><p>Anywhere Node.js 22.13+ runs, with Chrome, Chromium or Edge installed for rendering. The browser is detected automatically on Windows, macOS and common Linux paths. Windows also has a double-click launcher.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <section class="faq-group">
+    <h2>Models &amp; AI</h2>
+    <div class="faq-list">
+      <details>
+        <summary>Does Motif include an AI model?</summary>
+        <div class="answer"><p>No. Motif never bundles or downloads a model. Connect one you already run, such as Ollama, LM Studio, llama.cpp or Unsloth, or a coding CLI you're signed in to, such as Claude Code, Codex, OpenCode, Pi or OMP.</p></div>
+      </details>
+      <details>
+        <summary>Can I use it without any AI at all?</summary>
+        <div class="answer"><p>Yes. Four original offline templates make editable creatives you can download as SVG or PNG. They're clearly labelled as templates, so you always know what was AI-generated.</p></div>
+      </details>
+      <details>
+        <summary>Where does the artwork come from?</summary>
+        <div class="answer"><p>From the image provider you choose: Cloudflare Workers AI (FLUX.1 Schnell), Unsloth Studio, or any local OpenAI-compatible image server. Generation is text-to-image, so it won't reproduce your exact product from a photo. For that, use your own product photography.</p></div>
+      </details>
+      <details>
+        <summary>What happens when a model fails?</summary>
+        <div class="answer"><p>You see the error. Motif never quietly switches to another provider or swaps in template output, and your previous preview and saved creation stay as they were.</p></div>
+      </details>
+      <details>
+        <summary>Will the AI make things up about my products?</summary>
+        <div class="answer"><p>Motif tells models never to invent statistics, discounts, testimonials, certifications or product claims, and gives them only your reviewed Brand DNA as context. Models can still get things wrong, which is why every creation starts as a draft for you to review.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <section class="faq-group">
+    <h2>Privacy</h2>
+    <div class="faq-list">
+      <details>
+        <summary>Is my data sent anywhere?</summary>
+        <div class="answer"><p>Only when you choose. Your workspace stays in a database on your disk. The network is used when you analyze a website, pick a cloud model or CLI, or send to a social tool. The <a href="privacy.html#network">privacy page</a> lists exactly what goes where.</p></div>
+      </details>
+      <details>
+        <summary>How are my API keys stored?</summary>
+        <div class="answer"><p>Encrypted with AES-256-GCM, in a separate table, using a key file that stays next to your data. Keys are never included in JSON exports.</p></div>
+      </details>
+      <details>
+        <summary>Can someone else on my Wi-Fi open my studio?</summary>
+        <div class="answer"><p>No. The server listens only on <code>127.0.0.1</code>, so it's reachable from your own computer and nowhere else.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <section class="faq-group">
+    <h2>Publishing</h2>
+    <div class="faq-list">
+      <details>
+        <summary>Does Motif post to social media for me?</summary>
+        <div class="answer"><p>Only when you explicitly send something. Connect Buffer, Metricool or Zernio, approve a creation, choose an account, and send it as a draft or a scheduled post. Planning a week creates drafts and never publishes on its own.</p></div>
+      </details>
+      <details>
+        <summary>Which social networks can I reach?</summary>
+        <div class="answer"><p>Whichever channels your Buffer, Metricool or Zernio account supports, including Facebook, Instagram drafts, LinkedIn, X, Threads and Bluesky. Media support varies by provider. See the <a href="features.html#connections">connections table</a>.</p></div>
+      </details>
+      <details>
+        <summary>Does it show performance analytics?</summary>
+        <div class="answer"><p>Activity shows real counts of what you've made and scheduled. Motif doesn't make up reach, engagement or revenue numbers. Use your social tool for live metrics.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <section class="faq-group" style="border-bottom:0">
+    <h2>Your files</h2>
+    <div class="faq-list">
+      <details>
+        <summary>What can I export?</summary>
+        <div class="answer"><p>A PNG of each creative, a self-contained HTML file with artwork embedded, the full copy as Markdown, a CSV of your content, and a full JSON workspace backup.</p></div>
+      </details>
+      <details>
+        <summary>How do I move Motif to another computer?</summary>
+        <div class="answer"><p>Download a workspace backup in Settings and import it on the new machine. Imports add copies and never overwrite. Credentials aren't in the backup, so re-enter them. You can also copy the whole <code>data</code> folder, key file included.</p></div>
+      </details>
+      <details>
+        <summary>Can I go back to an earlier version of a design?</summary>
+        <div class="answer"><p>Yes. Open <b>Version history</b> in the creative editor, preview any saved version, and choose <b>Restore as draft</b>. The current version stays in history.</p></div>
+      </details>
+    </div>
+  </section>
+</div>
+
+<section class="section band">
+  <div class="wrap cta" style="align-items:center">
+    <div style="display:grid;gap:1.2rem">
+      <h2 class="h2">Still curious? <em>Try it.</em></h2>
+      <p class="lede">The fastest answer is a first brand of your own.</p>
+    </div>
+    <div class="hero-actions"><a class="btn btn-light" href="get-started.html">Get started <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+  </div>
+</section>
