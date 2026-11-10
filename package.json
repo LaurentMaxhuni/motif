@@ -5,13 +5,12 @@
   "type": "module",
   "description": "A fully local brand and marketing studio",
   "scripts": {
-    "start": "node server.js",
+    "start": "pnpm run build && node --experimental-strip-types server.ts",
     "dev": "vite",
-    "test": "node --test test/*.test.js",
-    "check": "tsc --noEmit && node --check server.js && node --check lib/core.js && node --check lib/cli.js && node --check lib/images.js && node --check lib/design.js && node --check lib/render.js && node --check lib/analysis.js && node --check lib/brand-extract.js && node --check lib/connectors.js && node --check public/theme.js",
-    "prestart": "npm run build",
-    "dev:server": "node --watch server.js",
-    "build": "tsc --noEmit && vite build"
+    "test": "pnpm run build && node --experimental-strip-types --test test/*.test.ts",
+    "check": "tsc --noEmit && tsc -p tsconfig.node.json",
+    "dev:server": "node --experimental-strip-types --watch server.ts",
+    "build": "pnpm run check && vite build"
   },
   "engines": {
     "node": ">=22.13"
@@ -23,6 +22,7 @@
     "cn": "^0.5.1",
     "css-tree": "3.1.0",
     "date-fns": "^4.4.0",
+    "fastify": "^5.12.8",
     "lucide-react": "^1.66.0",
     "playwright": "1.56.1",
     "radix-ui": "^1.8.1",
@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "@types/css-tree": "^3.2.0",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

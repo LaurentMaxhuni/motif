@@ -4,19 +4,28 @@ A local marketing workspace reconstructed from [Holo’s public product workflow
 
 ## Run
 
-Requires **Node.js 22.13+**. Dependencies are already installed in this checkout.
+Requires **Node.js 22.13+** and **pnpm**.
 
 ```powershell
-npm start
+pnpm install --frozen-lockfile
+pnpm start
 ```
 
-Open **http://127.0.0.1:3333**. Or double-click `start-motif.cmd`. To choose another port in PowerShell: `$env:PORT=3334; npm start`.
+Open **http://127.0.0.1:3333**. Or double-click `start-motif.cmd`. To choose another port in PowerShell: `$env:PORT=3334; pnpm start`.
 
-For a fresh checkout, first run `npm ci`. `npm start` typechecks and builds the React frontend before starting the local server. Internet is needed to install dependencies and to use cloud-backed CLI providers. Local templates and configured local models can work offline.
+`pnpm start` type-checks the project and builds the React frontend before starting the local server. Node runs the server, tests, and scripts directly from TypeScript. Internet is needed to install dependencies and to use cloud-backed CLI providers. Local templates and configured local models can work offline.
 
 The interface uses React, TypeScript, Tailwind CSS, official shadcn/ui components, Lucide icons, Sonner notifications and React Day Picker. Components live in `src/components/ui`; `components.json` configures the registry. Studio, workspace, calendar, Brand DNA, research, onboarding, connections, assistant, activity and settings share the same component system. The old custom DOM/CSS frontend has been removed.
 
-For frontend development run `npm run dev:server` and `npm run dev` in separate terminals, then open the Vite URL. The development proxy targets the default backend port 3333. The Windows launcher runs the production build automatically.
+For frontend development run `pnpm run dev:server` and `pnpm run dev` in separate terminals, then open the Vite URL. The development proxy targets the default backend port 3333. The Windows launcher runs the production build automatically.
+
+## Backend
+
+The TypeScript backend uses Fastify with feature plugins under `lib/routes` for workspace data, documents, research, creative generation, AI providers, and social connections. Shared request checks and error handling live in `lib/transport.ts`.
+
+SQLite uses the existing `data/motif.sqlite` document format with WAL journaling. Credentials use the adjacent `data/connector.key`. Existing databases and backups load directly.
+
+`createApp()` returns `{ server, store }`, where `server` is a Fastify instance. Start it with `await server.listen({ port: 3333, host: '127.0.0.1' })`, use `server.inject()` for API tests, and call `await server.close()` to cancel research and close SQLite. Unbound injection tests use a `Host` header of `localhost:3333`. Socket-based tests use their bound port.
 
 ## What works
 
@@ -44,7 +53,7 @@ Extraction runs in the local Node process. It examines public page copy, heading
 
 Review and apply the proposed fields before your stored Brand DNA changes. Approved research travels into subsequent local generation context. **Full report** downloads all findings and evidence for the displayed business. See [analysis scope and bounds](docs/brand-analysis.md).
 
-Extraction handles nested product data, product groups, streamed server HTML and modern CSS colors. Repeatable live/captured evaluations and remaining limits are documented in [brand extraction evaluation](docs/brand-extraction-evaluation.md). Run `node scripts/brand-research-smoke.mjs` for the isolated research browser workflow.
+Extraction handles nested product data, product groups, streamed server HTML and modern CSS colors. Repeatable live/captured evaluations and remaining limits are documented in [brand extraction evaluation](docs/brand-extraction-evaluation.md). Run `node --experimental-strip-types scripts/brand-research-smoke.ts` for the isolated research browser workflow.
 
 The crawler respects robots.txt and uses bounded same-origin requests. It does not run the target site's JavaScript or download its images/fonts. Sites that render their content only with JavaScript may need manual details. Enter the final canonical origin if a www/non-www redirect is refused. This is source-based research, not independent verification of a publisher's claims.
 
@@ -115,13 +124,13 @@ Calendar dates alone remain local reminders. External delivery happens only thro
 ## Verify
 
 ```powershell
-npm run check
-npm run build
-npm test
-node scripts/smoke.mjs
-node scripts/features-smoke.mjs
-node scripts/navigation-smoke.mjs
-node scripts/select-smoke.mjs
+pnpm run check
+pnpm run build
+pnpm test
+node --experimental-strip-types scripts/smoke.ts
+node --experimental-strip-types scripts/features-smoke.ts
+node --experimental-strip-types scripts/navigation-smoke.ts
+node --experimental-strip-types scripts/select-smoke.ts
 ```
 
 Build before running tests. Backend tests cover local AI contracts, rendering, atomic failures, persistence, backups, scheduling, network boundaries and compiled-asset allowlists. Browser suites use installed Chrome and isolated in-memory databases to verify AI creation/revision/undo/export, approvals, planning, onboarding, research, themes, connector review/delivery and responsive keyboard navigation. Set `CHROME_PATH` to override the executable. Screenshots and results are written under `output/playwright/` (Git-ignored). Model and provider responses are deterministic fixtures; actual model quality and live platform acceptance remain unverified.
