@@ -35,11 +35,16 @@ const browser=await chromium.launch({headless:true,executablePath:process.env.CH
 page.setDefaultTimeout(15000);page.setDefaultNavigationTimeout(15000);
 const failures=[];
 async function navigate(name){
-  const button=page.getByRole('button',{name,exact:true});
-  const collapsed = page.locator('[data-slot="sidebar"][data-state="collapsed"]');
-  if(!await button.isVisible() || await collapsed.count())await page.getByRole('button',{name:'Toggle Sidebar',exact:true}).click();
-  await button.click();
-  await page.getByRole('dialog',{name:'Sidebar',exact:true}).waitFor({state:'hidden'});
+  const toggle = page.getByRole('button',{name:'Toggle Sidebar',exact:true});
+  const dialog = page.getByRole('dialog',{name:'Sidebar',exact:true});
+  if (await page.evaluate(() => matchMedia('(min-width: 768px)').matches)) {
+    const sidebar = page.locator('[data-slot="sidebar"][data-collapsible]');
+    if (await sidebar.getAttribute('data-state') === 'collapsed') await toggle.click();
+  } else if (!await dialog.isVisible()) {
+    await toggle.click();
+  }
+  await page.getByRole('button',{name,exact:true}).click();
+  await dialog.waitFor({state:'hidden'});
 }
 async function noOverflow(){if(!await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))failures.push(await page.evaluate(()=>({issue:'page overflows viewport',width:innerWidth,scrollWidth:document.documentElement.scrollWidth,elements:[...document.querySelectorAll('main *')].filter(el=>el.getBoundingClientRect().right>innerWidth).slice(0,8).map(el=>({tag:el.tagName,text:el.textContent.slice(0,100),className:el.className}))})));}
 try{
