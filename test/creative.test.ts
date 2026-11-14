@@ -79,6 +79,21 @@ test('rendering audits real pixels: clean fixtures pass, broken layouts are diag
   assert.ok(needsRefinement(bad.audit!));
 });
 
+test('website-hero layouts are diagnosed as web grammar and sent to refinement', async () => {
+  // Mirrors a real generated "post": nav row, eyebrow, text column beside the artwork, button, UI cards, footer links.
+  const hero = {
+    imagePrompt: fixtureDesign.imagePrompt,
+    html: '<main class="ad"><header><b>{{brand}}</b><span class="nav">Ideas, in progress</span></header><section class="copy"><small>A little direction goes a long way</small><h1>{{headline}}</h1><p>{{subhead}}</p><strong>{{cta}}</strong></section><div class="art"><img data-asset="artwork"><div class="card one">Who for</div><div class="card two">What next</div></div><footer>Choose a direction → Make it yours</footer></main>',
+    css: '.ad{width:1080px;height:1080px;position:relative;background:#fff6e5;color:#0d2c45;font-family:Arial}header b{position:absolute;left:72px;top:68px;font-size:24px}.nav{position:absolute;right:72px;top:72px;font-size:16px;letter-spacing:2px}.copy{position:absolute;left:72px;top:260px;width:430px}.copy small{font-size:16px;color:#c2410c}.copy h1{font-size:80px;line-height:1;margin:20px 0}.copy p{font-size:24px}.copy strong{display:inline-block;background:#0d2c45;color:#fff;padding:20px 28px;font-size:20px}.art{position:absolute;left:560px;top:190px;width:450px;height:640px}.art img{width:100%;height:100%;object-fit:cover}.card{position:absolute;background:#fff;padding:20px;font-size:18px}.one{left:0;top:150px}.two{right:0;top:420px}footer{position:absolute;left:72px;bottom:46px;font-size:16px}',
+  };
+  const result = await renderDesign({ title: 'Hero', design: hero, headline: 'Start with a better question', cta: 'Try the idea lab', subhead: 'Three starting ideas.', image }, brand);
+  const web = result.audit!.issues.filter(issue => issue.code === 'web-layout').map(issue => issue.message).join(' ');
+  assert.match(web, /navigation bar/);
+  assert.match(web, /website hero/);
+  assert.match(web, /separate text blocks/);
+  assert.ok(needsRefinement(result.audit!));
+});
+
 async function modelServer(respond: (input: any, system: string) => unknown) {
   const calls: any[] = [];
   const server = http.createServer(async (req, res) => {

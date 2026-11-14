@@ -18,7 +18,7 @@ export interface TextMeasure {
   clipped: boolean;
   aided: boolean; // text-shadow or stroke improves legibility over busy backgrounds
 }
-export interface CompositionMeasure { width: number; height: number; texts: TextMeasure[]; artworkCoverage: number }
+export interface CompositionMeasure { width: number; height: number; texts: TextMeasure[]; artworkCoverage: number; artwork?: Rect[] }
 export type Severity = 'critical' | 'major' | 'minor';
 export interface AuditIssue { severity: Severity; code: string; message: string }
 export interface Audit { score: number; issues: AuditIssue[] }
@@ -67,11 +67,14 @@ export function measureComposition(tokens: Record<string, string>): CompositionM
     });
   }
   let artwork = 0;
+  const frames: Rect[] = [];
   for (const img of Array.from(document.querySelectorAll('img'))) {
     const r = img.getBoundingClientRect();
-    artwork += Math.max(0, Math.min(r.right, width) - Math.max(r.left, 0)) * Math.max(0, Math.min(r.bottom, height) - Math.max(r.top, 0));
+    const x = Math.max(r.left, 0), y = Math.max(r.top, 0), w = Math.max(0, Math.min(r.right, width) - x), h = Math.max(0, Math.min(r.bottom, height) - y);
+    artwork += w * h;
+    if (w * h > 0) frames.push({ x, y, w, h });
   }
-  return { width, height, texts, artworkCoverage: Math.min(1, artwork / (width * height)) };
+  return { width, height, texts, artworkCoverage: Math.min(1, artwork / (width * height)), artwork: frames };
 }
 
 /** Runs in the page: sample luminance of a text-free screenshot behind each text region. */
@@ -156,6 +159,22 @@ export function assessComposition(measure: CompositionMeasure, backgrounds: numb
     const brand = visible.find(({ text }) => text.role === 'brand')?.text;
     if (brand && brand.fontSize > headline.fontSize) add('minor', 'brand-size', 'The brand name is larger than the headline; make it a secondary signature.');
   }
+  // Web-page grammar: the most common way generated posts end up looking like a landing-page hero.
+  const blocks = visible.map(({ text }) => text);
+  const bounds = (rects: Rect[]) => ({ left: Math.min(...rects.map(r => r.x)), right: Math.max(...rects.map(r => r.x + r.w)), top: Math.min(...rects.map(r => r.y)), bottom: Math.max(...rects.map(r => r.y + r.h)) });
+  const topRow = blocks.filter(text => bounds(text.rects).bottom < measure.height * 0.16 && text.role !== 'headline');
+  if (topRow.some(text => bounds(text.rects).right < measure.width * 0.5) && topRow.some(text => bounds(text.rects).left > measure.width * 0.5))
+    add('major', 'web-layout', 'Text in both top corners reads as a website navigation bar; keep a single brand signature and let the image lead.');
+  // Judge the core message only; stray labels (e.g. cards drawn over the art) must not mask a hero split.
+  const message = blocks.filter(text => ['headline', 'subhead', 'cta'].includes(text.role));
+  const copy = message.length ? message : blocks.filter(text => text.role !== 'brand');
+  const art = [...(measure.artwork || [])].sort((a, b) => b.w * b.h - a.w * a.h)[0];
+  if (copy.length && art && art.w < measure.width * 0.75) {
+    const text = bounds(copy.flatMap(t => t.rects));
+    const separate = text.right <= art.x + 8 || text.left >= art.x + art.w - 8;
+    if (separate) add('major', 'web-layout', 'Copy sits in its own column beside the artwork, like a website hero; integrate the type with the image (full-bleed artwork with type in its negative space, or type overlapping the subject).');
+  }
+  if (blocks.length > 5) add('major', 'web-layout', `${blocks.length} separate text blocks make it read like a web page; a post needs a headline, at most one supporting line, the CTA and the brand.`);
   const words = visible.reduce((sum, { text }) => sum + text.text.split(/\s+/).filter(Boolean).length, 0);
   if (words > 45) add('minor', 'copy-load', `The design shows about ${words} words; static ads read best under 30.`);
   const families = new Set(visible.map(({ text }) => text.fontFamily));
@@ -171,4 +190,4 @@ export function assessComposition(measure: CompositionMeasure, backgrounds: numb
 }
 
 /** Quality bar for automatic refinement before a design is shown. */
-export const needsRefinement = (audit: Audit) => audit.issues.some(issue => issue.severity === 'critical') || audit.score < 70;
+export const needsRefinement = (audit: Audit) => audit.issues.some(issue => issue.severity === 'critical' || issue.code === 'web-layout') || audit.score < 70;
