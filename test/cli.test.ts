@@ -27,6 +27,22 @@ test('CLI creative designs and plain-language revisions use existing validation'
   assert.equal(result.headline,'Made with care');assert.equal(result.image,draft.image);assert.match(result.source,/CLI AI revision/);
 });
 
+test('Codex receives a schema for creative generation', async () => {
+  const settings = {
+    textProvider: 'codex' as const,
+    imageModel: 'separate-image-model',
+    cliProfiles: {
+      codex: { executable: fileURLToPath(new URL('./fixtures/cli-provider.ts', import.meta.url)), model: 'fixture/codex/schema' },
+    },
+  };
+  const brand = brandInput({ name: 'Morrow', colors: ['#123456', '#654321'] });
+  for (const mode of ['ai', 'hybrid']) {
+    const [draft] = await generate(settings, brand, { kind: 'Ad creative', mode, count: 1, brief: 'A launch' });
+    assert.equal(draft.title, 'CLI campaign');
+    assert.equal(Boolean(draft.design), mode === 'hybrid');
+  }
+});
+
 test('provider event parsing returns final text only and rejects provider failures',()=>{
   assert.equal(parseCliOutput('codex',JSON.stringify({type:'item.completed',item:{type:'agent_message',text:'Hello'}})),'Hello');
   assert.equal(parseCliOutput('claude',JSON.stringify({type:'result',result:'Hello'})),'Hello');

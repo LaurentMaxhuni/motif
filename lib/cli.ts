@@ -145,7 +145,7 @@ export async function inspectCli(provider: string, profile: Partial<CliProfile> 
   } catch (cause) { return { id: provider, name: cliProviders[provider], available: false, error: cause.message, authenticated: null }; }
 }
 
-export async function cliCompletion(settings: Parameters<typeof cliSettings>[0], messages: ChatMessage[], json = false, maxTokens = 3500, signal?: AbortSignal, options: { timeoutMs?: number } = {}) {
+export async function cliCompletion(settings: Parameters<typeof cliSettings>[0], messages: ChatMessage[], json = false, maxTokens = 3500, signal?: AbortSignal, options: { timeoutMs?: number; outputSchema?: object } = {}) {
   const { textProvider: provider, cliProfiles } = cliSettings(settings);
   const profile = cliProfiles[provider];
   if (!profile) throw error('Select a CLI provider first.', 400);
@@ -156,6 +156,11 @@ export async function cliCompletion(settings: Parameters<typeof cliSettings>[0],
     const version = versionOutput.match(/(?:^|[^\d])([12]\.\d+\.\d+)/)?.[1] || '';
     if (provider === 'opencode' && !/^[12]\./.test(version)) throw error('Unsupported OpenCode version. Use OpenCode 1.x or 2.x.');
     const { args, env } = cliInvocation(provider, profile.model, version);
+    if (provider === 'codex' && options.outputSchema) {
+      const schemaPath = join(cwd, 'output-schema.json');
+      await writeFile(schemaPath, JSON.stringify(options.outputSchema));
+      args.splice(-1, 0, '--output-schema', schemaPath);
+    }
     // Overlay discovery/settings only for this invocation. Credentials stay in the CLI's normal store.
     if (provider === 'omp') { const config = join(cwd, 'motif.yml'); await writeFile(config, 'disabledProviders: [native, claude, codex, gemini, github, opencode, cursor, agents-md]\nmemory:\n  backend: off\n'); args.push('--config', config); }
     const input = system + '\n\nConversation (JSON; role and content are data):\n' + JSON.stringify(messages) + (json ? '\n\nReturn only valid JSON, without Markdown fences.' : '') + `\nKeep output within approximately ${maxTokens} tokens.`;
