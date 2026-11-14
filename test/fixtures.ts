@@ -6,6 +6,9 @@ export const fixtureDesign={
   imagePrompt:'Abstract sculptural objects in terracotta and muted pink, studio lighting, no text.'
 };
 
+export const fixtureConcept={name:'Slow morning',insight:'People want rituals, not more stuff.',idea:'The first quiet minute of the day, made tangible.',composition:'hero object isolated on a confident flat color field',hierarchy:'artwork, headline, subhead, CTA',typography:'Georgia display headline, Arial supporting text',color:'Brand pink field with deep green type',artDirection:'Editorial still life of a ceramic cup in soft morning side light, empty upper-left backdrop'};
+export const fixtureConcepts=(count:number)=>Array.from({length:count},(_,i)=>({...fixtureConcept,name:`Route ${i+1}`}));
+
 // A deterministic PNG fixture, not model output. Avoid an external image dependency in tests.
 export function fixturePNG(){
   const size=256,raw=Buffer.alloc((size*4+1)*size);

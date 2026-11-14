@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { contentInput, fail, generate, generationInput, text } from '../core.ts';
-import { renderDesign } from '../render.ts';
+import { artworkPrompt, conceptLabel, finalizeCreative, planConcepts } from '../creative/workflow.ts';
+import type { Concept } from '../creative/workflow.ts';
 import type { GenerationJob, GenerationRequest } from '../../src/lib/generation.ts';
 import type { ApiRoutes, BodyRequest } from './types.ts';
 
@@ -21,15 +22,24 @@ export const generationRoutes: ApiRoutes = async (app, { store, settings, images
     const config = settings();
     if (input.mode === 'hybrid') images.assertReady(config);
     const signal = entry?.controller.signal;
-    const generated = await generate(config, brand, input, signal);
+    const onStage = (stage: GenerationJob['stage']) => { if (entry) entry.job.stage = stage; };
+    // Creative direction first, so every draft executes a distinct, deliberate concept.
+    let concepts: Concept[] | undefined;
+    if (input.mode === 'hybrid') {
+      onStage('plan');
+      concepts = await planConcepts(config, brand, input, signal);
+      signal?.throwIfAborted();
+      onStage('design');
+    }
+    const generated = await generate(config, brand, input, signal, concepts);
     signal?.throwIfAborted();
-    for (const item of generated) {
+    for (const [index, draft] of generated.entries()) {
+      let item = draft;
       if (item.design) {
-        if (entry) entry.job.stage = 'artwork';
-        item.image = await images.generate(config, item.design.imagePrompt, undefined, signal);
+        onStage('artwork');
+        item.image = await images.generate(config, artworkPrompt(config, brand, item.design.imagePrompt, concepts?.[index]), undefined, signal);
         signal?.throwIfAborted();
-        if (entry) entry.job.stage = 'render';
-        item.rendered = (await renderDesign(item, brand, signal)).rendered;
+        item = generated[index] = await finalizeCreative(item, { settings: config, brand, signal, concept: conceptLabel(concepts?.[index]), onStage });
         signal?.throwIfAborted();
       }
       if (entry) entry.job.completed++;

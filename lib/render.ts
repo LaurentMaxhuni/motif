@@ -2,6 +2,13 @@ import { chromium } from 'playwright';
 import type { Browser } from 'playwright';
 import { existsSync } from 'node:fs';
 import { designDocument } from './design.ts';
+import { assessComposition, measureComposition, sampleBackgrounds } from './creative/audit.ts';
+import type { Audit } from './creative/audit.ts';
+
+const hideText = '*,*::before,*::after{color:transparent!important;text-shadow:none!important;-webkit-text-stroke-color:transparent!important;text-decoration-color:transparent!important;caret-color:transparent!important}';
+
+/** Runs in the page. */
+function injectStyle(css: string){const style=document.createElement('style');style.textContent=css;document.head.append(style);}
 
 let pending: Promise<unknown>=Promise.resolve();
 export function renderDesign(...[item,brand,signal]: [...Parameters<typeof designDocument>, signal?: AbortSignal]){
@@ -30,7 +37,19 @@ export function renderDesign(...[item,brand,signal]: [...Parameters<typeof desig
       if(!imageOK)throw new Error('Generated artwork could not be decoded.');
       const png=await page.screenshot({type:'png',timeout:10000});
       if(png.length>5_000_000)throw new Error('Rendered composition exceeds 5 MB.');
-      return {rendered:`data:image/png;base64,${png.toString('base64')}`,document};
+      let audit: Audit | undefined;
+      try{
+        // Measure the real render, then sample what sits behind every text element with the text hidden.
+        const measure=await page.evaluate(measureComposition,{headline:item.headline||'',cta:item.cta||'',subhead:item.subhead||'',brand:brand.name||''});
+        await page.evaluate(injectStyle,hideText);
+        const backdrop=await page.screenshot({type:'png',timeout:10000});
+        const backgrounds=await page.evaluate(sampleBackgrounds,{png:`data:image/png;base64,${backdrop.toString('base64')}`,regions:measure.texts.map(text=>text.rects)});
+        audit=assessComposition(measure,backgrounds);
+      }catch(error){
+        signal?.throwIfAborted();
+        console.warn(`Composition audit skipped: ${error.message}`);
+      }
+      return {rendered:`data:image/png;base64,${png.toString('base64')}`,document,audit};
     }catch(error){throw Object.assign(new Error(`Local composition render failed: ${error.message}. Check Chrome installation or CHROME_PATH.`),{status:422});}
     finally{signal?.removeEventListener('abort', cancel);await browser?.close();}
   });

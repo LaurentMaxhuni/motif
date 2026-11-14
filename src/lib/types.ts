@@ -11,8 +11,10 @@ export interface Brand {
 export interface Content {
   id: string; version: number; brandId: string; kind: string; channel: string; status: string; title: string; headline: string;
   body: string; cta: string; notes: string; scheduledAt: string; layout: number; color: string; image: string; source: string;
-  design?: { html: string; css: string; imagePrompt: string }; subhead?: string; rendered?: string; createdAt?: string; updatedAt?: string
+  design?: { html: string; css: string; imagePrompt: string }; subhead?: string; rendered?: string; review?: CreativeReview; createdAt?: string; updatedAt?: string
 }
+/** Automatic visual quality check of a rendered creative (score out of 100). */
+export interface CreativeReview { score?: number; issues: string[]; concept?: string }
 export const cliProviders = { codex: 'Codex', claude: 'Claude Code', opencode: 'OpenCode', pi: 'Pi', omp: 'OMP' } as const
 export type CliProvider = keyof typeof cliProviders
 export interface CliProfile { executable: string; model: string }

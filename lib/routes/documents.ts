@@ -1,5 +1,6 @@
 import { brandInput, contentInput, fail } from "../core.ts";
 import { renderDesign } from "../render.ts";
+import { reviewSummary } from "../creative/workflow.ts";
 import type { ApiRoutes, BodyRequest, IdRequest } from "./types.ts";
 import type { Content } from "../../src/lib/types.ts";
 
@@ -63,9 +64,14 @@ export const documentRoutes: ApiRoutes = async (app, { store, connectors }) => {
             "This item changed in another window. Reload before saving.",
             409,
           );
-        input.rendered = (
-          await renderDesign(input, store.get("brand", input.brandId))
-        ).rendered;
+        const { rendered, audit } = await renderDesign(
+          input,
+          store.get("brand", input.brandId),
+        );
+        input.rendered = rendered;
+        const review = reviewSummary(audit, input.review?.concept);
+        if (review) input.review = review;
+        else delete input.review;
       }
       return store.save(type, input, id, body.version);
     };

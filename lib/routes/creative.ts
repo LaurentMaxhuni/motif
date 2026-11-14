@@ -6,6 +6,7 @@ import {
   revise,
 } from "../core.ts";
 import { renderDesign } from "../render.ts";
+import { artworkPrompt, finalizeCreative } from "../creative/workflow.ts";
 import { brandContext } from "../brand-data.ts";
 import type { ApiRoutes, BodyRequest } from "./types.ts";
 
@@ -39,10 +40,16 @@ export const creativeRoutes: ApiRoutes = async (
     if (body.regenerateArtwork || !current.image)
       revised.image = await images.generate(
         generationSettings,
-        revised.design.imagePrompt,
+        artworkPrompt(generationSettings, brand, revised.design.imagePrompt),
       );
-    const item = contentInput(revised, [brand.id]);
-    item.rendered = (await renderDesign(item, brand)).rendered;
+    // Render, audit and, if needed, refine the layout before showing the preview.
+    const item = contentInput(
+      await finalizeCreative(contentInput(revised, [brand.id]), {
+        settings: generationSettings,
+        brand,
+      }),
+      [brand.id],
+    );
     if (
       store.get("content", saved.id).version !== saved.version ||
       store.get("brand", brand.id).version !== brand.version

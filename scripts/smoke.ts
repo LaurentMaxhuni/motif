@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { createApp } from '../server.ts';
 import http from 'node:http';
-import { fixtureDesign,fixturePNG } from '../test/fixtures.ts';
+import {fixtureConcepts, fixtureDesign,fixturePNG } from '../test/fixtures.ts';
 
 mkdirSync('output/playwright',{recursive:true});
 const {server,store}=createApp({database:':memory:',seed:true});
@@ -30,6 +30,7 @@ const modelServer=http.createServer(async(req,res)=>{
     return res.end(JSON.stringify({choices:[{message:{content:`Fixture advice: ${prompt}`}}]}));
   }
   const input=JSON.parse(body.messages.at(-1).content);
+  if(input.task==='creative-plan')return res.end(JSON.stringify({choices:[{message:{content:JSON.stringify({concepts:fixtureConcepts(input.count)})}}]}));
   if(input.instruction==='fail')return res.end(JSON.stringify({choices:[{message:{content:'invalid JSON'}}]}));
   if(input.instruction==='delay')await new Promise(r=>releaseRevision=r);
   const item={title:input.current?.title||'AI campaign',headline:input.instruction?'A new perspective.':'Make everyday matter.',subhead:'A little intention goes a long way.',body:'A saved caption with <script>literal text</script>.',cta:'Explore the collection',design:{...fixtureDesign,css:fixtureDesign.css+(input.instruction?'.ad{background:#ebe1f0}':'')}};

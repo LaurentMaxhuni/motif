@@ -17,9 +17,11 @@ export function GenerationIndicator({ job, navigate }: {
     const index = visible.completed + 1
     const total = visible.count
     const stages = {
-      design: ['Preparing drafts', 'Preparing'],
+      plan: ['Developing concepts', 'Concepts'],
+      design: ['Designing drafts', 'Designing'],
       artwork: [`Artwork for draft ${index} of ${total}`, `Artwork ${index}/${total}`],
       render: [`Rendering draft ${index} of ${total}`, `Render ${index}/${total}`],
+      review: [`Quality review of draft ${index} of ${total}`, `Review ${index}/${total}`],
       save: ['Saving drafts', 'Saving'],
     }
     const [full, short] = stages[visible.stage]
