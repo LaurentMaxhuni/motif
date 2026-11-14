@@ -1,0 +1,203 @@
+.welcome {
+  --welcome-paper: #f8f6ed;
+  --welcome-ink: #1b201e;
+  --welcome-soft: #50574f;
+  --welcome-rule: #d1d3c7;
+  --welcome-blue: #2445ca;
+  --welcome-display: "Bricolage Grotesque Variable", sans-serif;
+  background: var(--welcome-paper);
+  color: var(--welcome-ink);
+  min-height: 100svh;
+  padding-inline: clamp(1.25rem, 5vw, 5rem);
+}
+
+.dark .welcome {
+  --welcome-paper: #181b20;
+  --welcome-ink: #f7f3e9;
+  --welcome-soft: #b9c0c6;
+  --welcome-rule: #424751;
+  --welcome-blue: #b6c3ff;
+}
+
+.welcome-masthead,
+.welcome-hero,
+.welcome-process,
+.welcome-setup {
+  margin-inline: auto;
+  max-width: 82rem;
+}
+
+.welcome-masthead {
+  min-height: 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--welcome-rule);
+}
+
+.welcome-wordmark {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font: 800 2rem/.9 var(--welcome-display);
+  letter-spacing: -.08em;
+}
+
+.welcome-wordmark svg { color: var(--welcome-blue); width: 1.65rem; height: 1.65rem; }
+.welcome-masthead nav { display: flex; align-items: center; gap: clamp(1rem, 3vw, 2.5rem); }
+.welcome-nav-link { color: var(--welcome-soft); font-size: .875rem; text-underline-offset: .25em; }
+.welcome-nav-link:hover { text-decoration: underline; }
+
+.welcome-hero {
+  display: grid;
+  grid-template-columns: 1.06fr .94fr;
+  align-items: center;
+  gap: clamp(2.25rem, 5vw, 5.5rem);
+  padding-block: clamp(3rem, 6.5vw, 6.5rem);
+}
+
+.welcome-intro { min-width: 0; }
+.welcome-eyebrow {
+  margin-bottom: 1.5rem;
+  color: var(--welcome-blue);
+  font-size: .78rem;
+  font-weight: 650;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.welcome h1 {
+  font: 800 clamp(3.1rem, 6.4vw, 7rem)/.85 var(--welcome-display);
+  letter-spacing: -.078em;
+}
+
+.welcome h1 em {
+  display: block;
+  color: var(--welcome-blue);
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 1.14em;
+  font-weight: 400;
+  letter-spacing: -.048em;
+  line-height: .93;
+}
+
+.welcome-lede {
+  max-width: 29rem;
+  margin-block: 1.75rem 1.75rem;
+  color: var(--welcome-soft);
+  font-size: clamp(1rem, 1.45vw, 1.24rem);
+  line-height: 1.6;
+}
+
+.welcome-cta {
+  display: inline-flex;
+  min-height: 3.1rem;
+  align-items: center;
+  gap: .9rem;
+  background: var(--welcome-blue);
+  color: var(--welcome-paper);
+  padding-inline: 1.1rem;
+  font-size: .875rem;
+  font-weight: 650;
+  transition: box-shadow 180ms ease, translate 180ms ease;
+}
+
+.welcome-cta:hover { translate: 0 -2px; box-shadow: 3px 4px 0 var(--welcome-ink); }
+.welcome-cta svg { width: 1.05rem; height: 1.05rem; }
+.welcome-cta-small { min-height: 2.5rem; gap: .55rem; }
+.welcome a:focus-visible { outline: 2px solid var(--welcome-blue); outline-offset: 5px; }
+
+.welcome-figure { margin: 0; min-width: 0; }
+.welcome-poster {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid var(--welcome-rule);
+  background: #cbdcf0;
+  aspect-ratio: 4 / 4.35;
+}
+
+.welcome-poster::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: .65rem -.65rem -.65rem .65rem;
+  border: 1px solid var(--welcome-blue);
+}
+
+.welcome-poster img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center 48%; }
+.welcome-poster > p {
+  position: absolute;
+  inset: clamp(1rem, 2.6vw, 2.2rem) auto auto clamp(1rem, 2.6vw, 2.2rem);
+  max-width: calc(100% - 2rem);
+  color: #142663;
+  font: italic 400 clamp(2rem, 4.8vw, 5rem)/.88 "Instrument Serif", Georgia, serif;
+  letter-spacing: -.045em;
+}
+
+.welcome-poster > p span {
+  display: block;
+  margin-top: .65rem;
+  font: 600 clamp(.65rem, 1vw, .85rem)/1.3 var(--welcome-display);
+  letter-spacing: .05em;
+}
+
+.welcome-figure figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-top: 1.15rem;
+  color: var(--welcome-soft);
+  font-size: .77rem;
+}
+
+.welcome-process {
+  border-block: 1px solid var(--welcome-rule);
+  padding-block: clamp(1.6rem, 4vw, 3rem);
+}
+
+.welcome-process h2,
+.welcome-setup h2 {
+  font: 750 clamp(1.65rem, 3.3vw, 3.1rem)/1 var(--welcome-display);
+  letter-spacing: -.06em;
+}
+
+.welcome-process ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 3vw, 3rem);
+  margin-top: 1.5rem;
+  list-style: none;
+  padding: 0;
+}
+
+.welcome-process li { border-top: 2px solid var(--welcome-blue); padding-top: .8rem; }
+.welcome-process h3 { font: 700 1.125rem/1.2 var(--welcome-display); }
+.welcome-process p, .welcome-setup > div:first-child p { margin-top: .5rem; color: var(--welcome-soft); line-height: 1.55; }
+.welcome-setup {
+  display: grid;
+  grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr);
+  gap: clamp(1.5rem, 5vw, 5rem);
+  padding-block: clamp(2.5rem, 7vw, 6.5rem);
+}
+
+.welcome-setup > div:first-child p { max-width: 20rem; }
+.welcome :is(#how-motif-works, #brand-setup) { scroll-margin-top: 1.25rem; }
+
+@media (max-width: 767px) {
+  .welcome-masthead { min-height: 4rem; }
+  .welcome-masthead nav { gap: .75rem; }
+  .welcome-nav-link { display: none; }
+  .welcome-hero { grid-template-columns: 1fr; gap: 2rem; padding-block: 2.75rem 2.4rem; }
+  .welcome h1 { font-size: clamp(3.05rem, 11vw, 5.2rem); }
+  .welcome-eyebrow { margin-bottom: 1.05rem; }
+  .welcome-lede { margin-block: 1.25rem; }
+  .welcome-poster { aspect-ratio: 4 / 4; }
+  .welcome-poster > p { font-size: clamp(2.15rem, 8vw, 4rem); }
+  .welcome-process ol, .welcome-setup { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-cta { transition: none; }
+  .welcome-cta:hover { translate: none; }
+}

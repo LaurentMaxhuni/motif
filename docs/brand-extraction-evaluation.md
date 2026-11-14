@@ -16,13 +16,13 @@ Original captures differ from final crawls because discovery changed. Final pars
 Reproduce without website traffic:
 
 ```powershell
-node scripts/brand-extraction-eval.mjs --captures output/brand-quality/live-final --out output/brand-quality/replay
+node --experimental-strip-types scripts/brand-extraction-eval.ts --captures output/brand-quality/live-final --out output/brand-quality/replay
 ```
 
 Create fresh public captures explicitly:
 
 ```powershell
-node scripts/brand-extraction-eval.mjs --live --out output/brand-quality/live
+node --experimental-strip-types scripts/brand-extraction-eval.ts --live --out output/brand-quality/live
 ```
 
 The dedicated browser suite uses an isolated database and fixture transport. Ten checks exercise review, edits, apply, persisted evidence, reload, full-report download, discard, version conflicts and cancellation without changing live brands. Existing feature checks cover malformed model interpretation and fallback. Actual model interpretation remains unverified: no local model is configured or running.

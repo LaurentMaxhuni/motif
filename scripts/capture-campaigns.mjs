@@ -1,8 +1,8 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { chromium } from 'playwright'
-import { renderDesign } from '../lib/render.js'
-import { createApp } from '../server.js'
-import { brandInput, contentInput } from '../lib/core.js'
+import { renderDesign } from '../lib/render.ts'
+import { createApp } from '../server.ts'
+import { brandInput, contentInput } from '../lib/core.ts'
 import { campaignBrand, campaigns } from '../src/marketing/campaigns.mjs'
 
 const folder = 'src/marketing/assets'
@@ -20,7 +20,7 @@ for (const [index, campaign] of campaigns.entries()) {
   renderedCampaigns.push(rendered)
   store.save('content', contentInput({ ...item, rendered }, [brand.id]))
 }
-await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
+const base = await server.listen({ port: 0, host: '127.0.0.1' })
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe' })
 try {
   const artwork = await browser.newPage({ viewport: { width: 640, height: 640 } })
@@ -37,7 +37,7 @@ try {
   await artwork.close()
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 })
   await page.addInitScript(() => localStorage.setItem('motif-theme', 'dark'))
-  await page.goto(`http://127.0.0.1:${server.address().port}/app`)
+  await page.goto(base + '/app')
   await page.getByRole('heading', { name: 'What will you create next?' }).waitFor()
   await page.locator('[data-sidebar="menu-button"]').filter({ hasText: /^Workspace$/ }).click()
   await page.getByRole('heading', { name: 'Workspace', exact: true }).waitFor()
@@ -47,6 +47,5 @@ try {
   console.log('Rendered three original Motif campaigns with renderDesign and captured the real desktop and phone workspace. Only isolated in-memory data was used.')
 } finally {
   await browser.close()
-  await new Promise(resolve => server.close(resolve))
-  store.db.close()
+  await server.close()
 }

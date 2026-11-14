@@ -56,7 +56,7 @@ function Landing() {
     </div></section>
     <section className="section source-section" id="open-source" aria-labelledby="source-heading"><div className="wrap">
       <div className="section-head"><h2 id="source-heading">Open source.<br />Locally yours.</h2><p>MIT licensed. Your workspace stays local. Connect providers when you need them.</p></div>
-      <div className="source-grid"><div className="source-code" data-visual="source"><div className="source-code-title"><span>Run Motif locally</span><a className="link" href={repository}>Read source</a></div><pre><code>{'npm ci\nnpm start'}</code></pre><a className="link" href={repository + '#run'}>Read the setup guide</a></div>
+      <div className="source-grid"><div className="source-code" data-visual="source"><div className="source-code-title"><span>Run Motif locally</span><a className="link" href={repository}>Read source</a></div><pre><code>{'pnpm install --frozen-lockfile\npnpm start'}</code></pre><a className="link" href={repository + '#run'}>Read the setup guide</a></div>
       <dl className="setup-questions"><div><dt>What do I need?</dt><dd>Node.js 22.13+ and Chrome, Chromium, or Edge.</dd></div><div><dt>Are models included?</dt><dd>No. Motif needs no account. Provider costs and policies apply.</dd></div><div><dt>Does Motif publish automatically?</dt><dd>No. Connections require your explicit delivery action. Calendar entries stay local.</dd></div></dl></div>
     </div></section>
   </main>

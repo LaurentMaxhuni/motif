@@ -1,10 +1,9 @@
 import { chromium } from 'playwright'
 import assert from 'node:assert/strict'
-import { createApp } from '../server.js'
+import { createApp } from '../server.ts'
 
 const { server, store } = createApp({ database: ':memory:' })
-await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
-const base = `http://127.0.0.1:${server.address().port}`
+const base = await server.listen({ port: 0, host: '127.0.0.1' })
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe' })
 const errors = [], apiRequests = [], externalRequests = []
 let checks = 0
@@ -76,7 +75,8 @@ try {
   await page.locator('header').getByRole('link', { name: 'Try Motif', exact: true }).click()
   await page.getByLabel('Business name', { exact: true }).waitFor()
   assert.equal(new URL(page.url()).pathname, '/app')
-  assert.ok(await page.locator('h1').evaluate(el => getComputedStyle(el).fontFamily.includes('Segoe UI')), 'public typography must not leak into the app')
+  const welcome = page.getByRole('heading', { name: 'Make it unmistakably yours.', exact: true })
+  assert.ok(await welcome.evaluate(el => getComputedStyle(el).fontFamily.includes('Bricolage Grotesque')), 'onboarding display font loaded')
   assert.ok(await page.locator('link[rel="stylesheet"]').evaluateAll(links => links.every(el => !el.href.includes('Marketing-'))), 'public stylesheet must not load in app')
   checks += 4
   const noScript = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 375, height: 812 } })
@@ -94,6 +94,5 @@ try {
   console.log(`Landing smoke passed: ${checks} checks covering responsive pages, local fonts/assets, menu keyboard and pointer interaction, focus, hover, reduced motion, privacy navigation, app CSS isolation, and no-JavaScript rendering.`)
 } finally {
   await browser.close()
-  await new Promise(resolve => server.close(resolve))
-  store.db.close()
+  await server.close()
 }

@@ -1,0 +1,78 @@
+<!--page {"title": "Privacy & data · Motif", "description": "What Motif keeps on your computer, what reaches the network and when, how credentials are protected, and what this website collects (nothing).", "nav": "privacy"}-->
+<section class="page-hero">
+  <div class="wrap">
+    <p class="eyebrow">Privacy &amp; data</p>
+    <h1 class="h1">Your work stays <em>where you made it.</em></h1>
+    <p class="lede">Motif is software you run, not a service you sign up for. There's no Motif account, no Motif cloud, and no telemetry. This page explains exactly what stays on your computer and what reaches the network, and when.</p>
+  </div>
+</section>
+
+<div class="wrap docs">
+  <aside class="toc" aria-label="On this page">
+    <p>On this page</p>
+    <a href="#summary">In short</a>
+    <a href="#local">What stays local</a>
+    <a href="#network">What uses the network</a>
+    <a href="#credentials">Credentials</a>
+    <a href="#exports">Exports &amp; backups</a>
+    <a href="#rendering">Rendering safety</a>
+    <a href="#site">About this website</a>
+  </aside>
+
+  <article class="prose">
+    <h2 id="summary">In short</h2>
+    <div class="kv">
+      <div><span class="k"><svg aria-hidden="true"><use href="#i-check"/></svg>Local</span><b>Your workspace</b><p>Brands, drafts, versions, the calendar and settings live in a SQLite file on your disk.</p></div>
+      <div><span class="k"><svg aria-hidden="true"><use href="#i-check"/></svg>Local</span><b>The app itself</b><p>The server only listens on <code>127.0.0.1</code>, so other devices on your network can't reach it.</p></div>
+      <div><span class="k"><svg aria-hidden="true"><use href="#i-check"/></svg>Never</span><b>Telemetry or tracking</b><p>No analytics, no remote fonts, no automatic model downloads, no automatic cloud fallback.</p></div>
+      <div><span class="k warn"><svg aria-hidden="true"><use href="#i-cloud"/></svg>Your choice</span><b>Cloud services</b><p>Used only when you pick a cloud model, analyze a website, or connect a social tool.</p></div>
+    </div>
+
+    <h2 id="local">What stays local</h2>
+    <p>Everything you create is stored in <code>data/motif.sqlite</code> in the Motif folder. That includes your brands and Brand DNA, product photos, creations and their version history, research reports you've applied, the calendar and settings.</p>
+    <p>Website analyses run inside the local server. They're temporary jobs, so nothing is stored until you review and apply the result. Restarting the server ends pending jobs and clears generation progress.</p>
+    <p>The interface is locked down with a Content Security Policy, so the browser can only talk to your local Motif server.</p>
+
+    <h2 id="network">What uses the network</h2>
+    <p>The network is used only for the actions below, and only when you start them.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>When you…</th><th>What's contacted</th><th>What's sent</th></tr></thead>
+        <tbody>
+          <tr><td><b>Analyze a website</b></td><td>That site's public pages, robots.txt, sitemap and up to three stylesheets</td><td>Ordinary page requests. Motif never logs in, runs the site's scripts, or downloads its images or fonts.</td></tr>
+          <tr><td><b>Use a local model</b></td><td>The loopback address you entered</td><td>Prompts with your brand context, sent only to your own machine</td></tr>
+          <tr><td><b>Use a coding CLI</b></td><td>Whatever cloud model that CLI is configured for</td><td>Prompts, brand context, website excerpts and requested copy</td></tr>
+          <tr><td><b>Use Cloudflare images</b></td><td>Cloudflare Workers AI</td><td>The artwork prompt</td></tr>
+          <tr><td><b>Test or send to Buffer, Metricool or Zernio</b></td><td>That provider's official API</td><td>Your credentials and, when sending, the caption, media and schedule you reviewed</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><p><b>A note on local servers:</b> Motif accepts only loopback addresses for model endpoints and rejects redirects. But it can't control what a separate model server does, so make sure yours is set up to run locally.</p></div>
+    <h3>Website analysis safeguards</h3>
+    <ul>
+      <li>Respects robots.txt and stays on the same origin.</li>
+      <li>Checks and pins DNS on every request, and refuses private destinations, unusual ports, oversized documents, disallowed paths and long redirect chains.</li>
+      <li>Has byte, request and time limits on every job.</li>
+    </ul>
+
+    <h2 id="credentials">Credentials</h2>
+    <p>Connector and image-provider credentials are encrypted with <b>AES-256-GCM</b> and stored in a separate database table. The key lives in <code>data/connector.key</code>, next to your database.</p>
+    <ul>
+      <li>Credentials, their ciphertext and the key are <b>never</b> included in JSON exports. Re-enter them on a new installation.</li>
+      <li>A physical copy of the database <b>does</b> contain encrypted secrets. Protect it and the key file with your normal account and disk security.</li>
+      <li>Don't delete the key file if you want existing connections to keep working.</li>
+      <li>Coding CLIs keep their own sign-in. Motif never copies CLI credentials into its database.</li>
+    </ul>
+
+    <h2 id="exports">Exports &amp; backups</h2>
+    <p><b>Download workspace backup</b> in Settings produces a consistent JSON copy of your brands and content while Motif is running. Importing a backup adds new copies and never overwrites existing data or endpoint settings. Connections and delivery history are left out of exports on purpose.</p>
+    <p>Deleting a creation also deletes its version history.</p>
+
+    <h2 id="rendering">Rendering safety</h2>
+    <p>AI-written HTML and CSS are checked against an allow-list of tags, attributes and CSS before rendering. Creatives are rendered in an isolated local browser with JavaScript disabled and every network request blocked. Images returned by a model must be embedded PNG, JPEG or WebP, and Motif never fetches remote image URLs.</p>
+
+    <h2 id="site">About this website</h2>
+    <p>This website is a set of static pages. It sets no cookies and loads no analytics, trackers, embeds or third-party fonts. Everything, fonts included, is served from the same place as the page. The only thing it stores is your light or dark theme choice, kept in your own browser's local storage.</p>
+    <p class="small muted">Last updated 11 November 2026.</p>
+  </article>
+</div>

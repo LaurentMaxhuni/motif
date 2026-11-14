@@ -4,19 +4,30 @@ A local marketing workspace reconstructed from [Holo’s public product workflow
 
 ## Run
 
-Requires **Node.js 22.13+**. Dependencies are already installed in this checkout.
+Requires **Node.js 22.13+** and **pnpm**.
 
 ```powershell
-npm start
+pnpm install --frozen-lockfile
+pnpm start
 ```
 
-Open **http://127.0.0.1:3333** for the landing page, **http://127.0.0.1:3333/app** for the studio, or **http://127.0.0.1:3333/privacy** for the privacy policy. Or double-click `start-motif.cmd`. To choose another port in PowerShell: `$env:PORT=3334; npm start`.
+Open **http://127.0.0.1:3333** for the landing page, **http://127.0.0.1:3333/app** for the studio, or **http://127.0.0.1:3333/privacy** for the privacy policy. Or double-click `start-motif.cmd`. To choose another port in PowerShell, run `$env:PORT=3334; pnpm start`.
 
-For a fresh checkout, first run `npm ci`. `npm start` typechecks and builds the React frontend before starting the local server. Internet is needed to install dependencies and to use cloud-backed CLI providers. Local templates and configured local models can work offline.
+The standalone marketing site in [site/](site/README.md) can be built and deployed separately.
+
+`pnpm start` type-checks the project and builds the React frontend before starting the local server. Node runs the server, tests, and scripts directly from TypeScript. Internet is needed to install dependencies and to use cloud-backed CLI providers. Local templates and configured local models can work offline.
 
 The interface uses React, TypeScript, Tailwind CSS, official shadcn/ui components, Lucide icons, Sonner notifications and React Day Picker. Components live in `src/components/ui`; `components.json` configures the registry. Studio, workspace, calendar, Brand DNA, research, onboarding, connections, assistant, activity and settings share the same component system. The old custom DOM/CSS frontend has been removed.
 
-For frontend development run `npm run dev:server` and `npm run dev` in separate terminals, then open the Vite URL. The development proxy targets the default backend port 3333. The Windows launcher runs the production build automatically.
+For frontend development run `pnpm run dev:server` and `pnpm run dev` in separate terminals, then open the Vite URL. The development proxy targets the default backend port 3333. The Windows launcher runs the production build automatically.
+
+## Backend
+
+The TypeScript backend uses Fastify with feature plugins under `lib/routes` for workspace data, documents, research, creative generation, AI providers, and social connections. Shared request checks and error handling live in `lib/transport.ts`.
+
+SQLite uses the existing `data/motif.sqlite` document format with WAL journaling. Credentials use the adjacent `data/connector.key`. Existing databases and backups load directly.
+
+`createApp()` returns `{ server, store }`, where `server` is a Fastify instance. Start it with `await server.listen({ port: 3333, host: '127.0.0.1' })`, use `server.inject()` for API tests, and call `await server.close()` to cancel research and close SQLite. Unbound injection tests use a `Host` header of `localhost:3333`. Socket-based tests use their bound port.
 
 ## What works
 
@@ -44,7 +55,7 @@ Extraction runs in the local Node process. It examines public page copy, heading
 
 Review and apply the proposed fields before your stored Brand DNA changes. Approved research travels into subsequent local generation context. **Full report** downloads all findings and evidence for the displayed business. See [analysis scope and bounds](docs/brand-analysis.md).
 
-Extraction handles nested product data, product groups, streamed server HTML and modern CSS colors. Repeatable live/captured evaluations and remaining limits are documented in [brand extraction evaluation](docs/brand-extraction-evaluation.md). Run `node scripts/brand-research-smoke.mjs` for the isolated research browser workflow.
+Extraction handles nested product data, product groups, streamed server HTML and modern CSS colors. Repeatable live/captured evaluations and remaining limits are documented in [brand extraction evaluation](docs/brand-extraction-evaluation.md). Run `node --experimental-strip-types scripts/brand-research-smoke.ts` for the isolated research browser workflow.
 
 The crawler respects robots.txt and uses bounded same-origin requests. It does not run the target site's JavaScript or download its images/fonts. Sites that render their content only with JavaScript may need manual details. Enter the final canonical origin if a www/non-www redirect is refused. This is source-based research, not independent verification of a publisher's claims.
 
@@ -61,10 +72,10 @@ Open **Connections**, choose a provider, and save your API credentials locally. 
 | Provider | Configuration | Current media support |
 | --- | --- | --- |
 | Buffer | Personal API key and organization ID | Public HTTPS image URLs or text |
-| Zernio | API key | Public HTTPS image URLs or text |
+| Zernio | API key | Saved rendered artwork for drafts, public HTTPS image URLs, or text |
 | Metricool | API token, user ID, blog/brand ID; API-enabled plan | Text drafts/schedules; attach artwork in Metricool |
 
-Local PNG files and localhost URLs cannot be fetched by these external platforms. Motif does not automatically upload artwork. For Buffer/Zernio, host your export yourself and supply its public image URL; leaving it blank sends text only. Instagram requires image media and is draft-only in these connectors. Supported destinations include Facebook, Instagram drafts, LinkedIn, Twitter/X, Threads, and Bluesky; channel availability depends on your provider account.
+For a Zernio draft, choose a saved creation with a rendered image, select **Attach saved artwork**, and review the image, caption, and destination before sending. Motif uploads the image when you confirm the draft. If the upload fails, Motif keeps the review open for an explicit retry. For templates without a saved render, use a public HTTPS image URL or attach the export in the provider. Instagram drafts require image media. Supported destinations include Facebook, Instagram drafts, LinkedIn, Twitter/X, Threads, and Bluesky. Channel availability depends on your provider account.
 
 The selected saved creation and connection are version-checked before sending. Identical deliveries are suppressed. Delivery history includes the creation, account, outcome and remote ID. An uncertain result must be checked on the provider before another attempt. See [connector setup, contracts, and limits](docs/connectors.md). API contracts are fixture-tested; live credentials and provider-side acceptance remain unverified. No live posts were created during implementation.
 
@@ -85,10 +96,14 @@ Text uses `/chat/completions`; generation requests JSON-object output. Choose a 
 1. Configure a **text AI provider** and an **image AI provider** in Settings. Images can use Cloudflare Workers AI, a custom local URL or Unsloth Studio.
 2. In Creative studio enter a brief and start with **1 variation**. AI generates the complete design and artwork; no canvas editor is required.
 3. Motif asks the text model for copy, HTML, CSS, and an artwork prompt. It sends that prompt to the image model, embeds the returned artwork, and renders the result locally. Larger batches generate artwork sequentially and can take several minutes.
+
+   Studio shows the current stage and how many drafts are prepared. You can refresh or leave Studio and come back while Motif is running. Cancel to stop the batch, or retry a failed or cancelled job with the same brief and calendar dates. Drafts are saved together when the full batch is ready. Restarting the server clears job progress and retry history.
 4. Open the creation, describe a change, and click **Revise with AI**. Copy and composition are revised together. **Generate new artwork** replaces the artwork; leave it unchecked to preserve existing artwork. Older creations without artwork receive AI artwork on their first revision. **Undo revision** restores the previous preview. A revision returns to Draft and clears its scheduled date, requiring a new review. **Save creation** persists the preview; closing it discards unsaved changes. Invalid output or failed generation leaves the previous preview and saved creation intact.
 5. Download **PNG** for a ready-to-use creative, or **HTML** for a self-contained design with artwork embedded. Full caption/article/script text remains separately exportable. For email and SEO content the square is a promotional creative; the full copy is not squeezed into the image.
 
 This mode uses model-authored compositions, not the four SVG template layouts. Text stays separate from artwork. Current artwork generation is text-to-image; it does not send uploaded product photos to an image-editing model or guarantee exact product reproduction.
+
+Open **Version history** in the creative editor to preview earlier saved copy and artwork. **Restore as draft** saves the chosen version on the same creation, clears approval and scheduling, and keeps the previous version in history. History starts with the next save for existing creations. It lives in the SQLite database. Workspace JSON backups include current versions, and deleting a creation deletes its history.
 
 Rendering requires installed Chrome/Chromium/Edge. Windows Chrome and Edge, common Linux Chromium paths, and macOS Chrome are detected. Set `CHROME_PATH` if yours is elsewhere. Renderer and output documents block scripts and network access; HTML tags/attributes and CSS are validated before rendering. CSS parsing uses [CSSTree](https://github.com/csstree/csstree); local browser rendering uses [Playwright](https://playwright.dev/docs/api/class-browser).
 
@@ -117,14 +132,14 @@ Calendar dates alone remain local reminders. External delivery happens only thro
 Public pages are rendered to static HTML during the build and hydrated by React. They remain readable without JavaScript and never load workspace data. Their visual system is documented in [docs/marketing-design.md](docs/marketing-design.md). The privacy text is a factual template for the local app, not legal advice or a policy for an independently hosted service.
 
 ```powershell
-npm run check
-npm run build
-npm test
-node scripts/smoke.mjs
-node scripts/features-smoke.mjs
-node scripts/navigation-smoke.mjs
-node scripts/select-smoke.mjs
-node scripts/landing-smoke.mjs
+pnpm run check
+pnpm run build
+pnpm test
+node --experimental-strip-types scripts/smoke.ts
+node --experimental-strip-types scripts/features-smoke.ts
+node --experimental-strip-types scripts/navigation-smoke.ts
+node --experimental-strip-types scripts/select-smoke.ts
+node --experimental-strip-types scripts/landing-smoke.mjs
 ```
 
 Build before running tests. Backend tests cover local AI contracts, rendering, atomic failures, persistence, backups, scheduling, network boundaries and compiled-asset allowlists. Browser suites use installed Chrome and isolated in-memory databases to verify AI creation/revision/undo/export, approvals, planning, onboarding, research, themes, connector review/delivery and responsive keyboard navigation. Set `CHROME_PATH` to override the executable. Screenshots and results are written under `output/playwright/` (Git-ignored). Model and provider responses are deterministic fixtures; actual model quality and live platform acceptance remain unverified.
