@@ -11,12 +11,17 @@ mkdirSync('output/playwright',{recursive:true});
 const {server,store}=createApp({database:':memory:',seed:true});
 await server.listen({port:0,host:'127.0.0.1'});
 const origin=`http://127.0.0.1:${(server.server.address() as AddressInfo).port}`;
-let releaseRevision, releaseChat, imageRequests=0;
+let releaseRevision, releaseChat, releaseArtwork, imageRequests=0;
+let pauseArtwork=false;
 const chatRequests=[];
 let chatStarted;const delayedChatStarted=new Promise(resolve=>chatStarted=resolve);
 const modelServer=http.createServer(async(req,res)=>{
   let raw='';for await(const c of req)raw+=c;const body=JSON.parse(raw||'{}');res.setHeader('Content-Type','application/json');
-  if(req.url==='/v1/images/generations'){imageRequests++;return res.end(JSON.stringify({data:[{b64_json:fixturePNG().toString('base64')}]}));}
+  if(req.url==='/v1/images/generations'){
+    imageRequests++;
+    if(pauseArtwork)await new Promise<void>(resolve=>{releaseArtwork=resolve;});
+    return res.end(JSON.stringify({data:[{b64_json:fixturePNG().toString('base64')}]}));
+  }
   // Plain assistant prompts can themselves look like JSON; classify by the API contract.
   if(body.response_format?.type!=='json_object'){
     const prompt=body.messages.at(-1).content;chatRequests.push(body.messages);
@@ -35,7 +40,7 @@ const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'C:
 const context=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});
 const page=await context.newPage();page.setDefaultTimeout(15000);
 const errors=[],external=[],checks=[],consoleErrors=[],failedResponses=[];
-const expectedFailures=new Set(['/api/generate:400','/api/revise:502','/api/chat:502']);
+const expectedFailures=new Set(['/api/revise:502','/api/chat:502']);
 page.on('pageerror',e=>errors.push(e.message));
 page.on('console',message=>{if(message.type()==='error')consoleErrors.push({text:message.text(),url:message.location().url});});
 page.on('response',response=>{if(response.status()>=400)failedResponses.push({url:response.url(),status:response.status()});});
@@ -61,18 +66,45 @@ try{
   for(const name of ['textEndpoint','imageEndpoint'])await page.locator(`#${name.replace('Endpoint','-endpoint')}`).fill(modelOrigin);
   await page.locator('#text-model').fill('fixture-text');await page.locator('#image-model').fill('fixture-image');await page.getByRole('button',{name:'Save settings',exact:true}).click();
   await page.getByRole('button',{name:'Creative studio',exact:true}).click();
-  await page.locator('#brief').fill('A thoughtful product launch');await page.getByRole('button',{name:'Create content',exact:true}).click();
+  pauseArtwork=true;
+  await page.locator('#brief').fill('A thoughtful product launch');
+  await page.getByRole('button',{name:'Create content',exact:true}).click();
+  await page.getByText(/Generating artwork for draft 1/).waitFor();
+  await page.getByRole('button',{name:'Calendar',exact:true}).click();
+  await page.getByRole('heading',{name:'Content calendar',exact:true}).waitFor();
+  await page.setViewportSize({width:320,height:800});
+  const progressLink=page.getByRole('button',{name:'Artwork for draft 1 of 1. Open Creative studio',exact:true});
+  await progressLink.waitFor();
+  assert.equal(await progressLink.innerText(),'Artwork 1/1');
+  assert.ok(await page.locator('header').evaluate(header=>header.scrollWidth<=header.clientWidth));
+  await progressLink.click();
+  await page.setViewportSize({width:1440,height:1000});
+  await page.reload();
+  await page.getByText(/Generating artwork for draft 1/).waitFor();
+  await page.getByRole('button',{name:'Cancel generation',exact:true}).click();
+  await page.getByText('Generation cancelled. No drafts were saved.',{exact:true}).waitFor();
+  assert.equal(store.all('content').length,4);
+  pauseArtwork=false;
+  releaseArtwork?.();
+  await page.getByRole('button',{name:'Retry generation',exact:true}).click();
+  checks.push('generation progress survives refresh and cancelled jobs can be retried');
+  await page.getByRole('button',{name:'Calendar',exact:true}).click();
+  await page.getByRole('button',{name:'1 draft ready. Review drafts',exact:true}).click();
+  await page.getByRole('heading',{name:'Workspace',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Edit AI campaign',exact:true}).waitFor();
+  checks.push('header tracks artwork on mobile calendar and opens the completed draft in Workspace');
+  await page.getByRole('button',{name:'Creative studio',exact:true}).click();
   await page.waitForFunction(()=>document.querySelectorAll('.content-card').length===5);checks.push('complete composition and artwork generation');
   await page.screenshot({path:'output/playwright/studio-desktop.png',fullPage:true});
   const created=store.all('content').find(c=>c.title==='AI campaign');assert.ok(created.design);assert.ok(created.rendered);
   await page.getByRole('button',{name:'Edit AI campaign',exact:true}).click();
   assert.equal(await page.locator('[data-layout],#edit-color,[name=designHTML],[name=designCSS],[name=headline],#content-image').count(),0);checks.push('no manual canvas or code controls');
   await revise('Make it softer with a stronger headline');await page.getByText('AI revision ready. Save to keep it.',{exact:true}).waitFor();
-  assert.equal(await page.locator('[aria-label="Generated copy"] h3').textContent(),'A new perspective.');assert.equal(store.get('content',created.id).headline,created.headline);assert.equal(imageRequests,1);checks.push('unsaved prompt revision preserves artwork');
+  assert.equal(await page.locator('[aria-label="Generated copy"] h3').textContent(),'A new perspective.');assert.equal(store.get('content',created.id).headline,created.headline);assert.equal(imageRequests,2);checks.push('unsaved prompt revision preserves artwork');
   assert.match(await page.locator('[aria-label="Generated copy"]').textContent(),/<script>literal text<\/script>/);assert.equal(await page.locator('[aria-label="Generated copy"] script').count(),0);checks.push('copy renders as escaped text');
   await page.getByRole('button',{name:'Undo revision',exact:true}).click();assert.equal(await page.locator('[aria-label="Generated copy"] h3').textContent(),created.headline);checks.push('undo restores previous design');
   await revise('fail');await page.getByRole('alert').filter({hasText:'invalid revision'}).waitFor();assert.equal(await page.getByLabel('Describe your changes').inputValue(),'fail');assert.equal(await page.locator('[aria-label="Generated copy"] h3').textContent(),created.headline);checks.push('failed revisions preserve preview and request');
-  await page.getByLabel('Generate new artwork').check();await revise('Use new artwork and a softer design');await page.getByText('AI revision ready. Save to keep it.',{exact:true}).waitFor();assert.equal(imageRequests,2);checks.push('explicit artwork regeneration');
+  await page.getByLabel('Generate new artwork').check();await revise('Use new artwork and a softer design');await page.getByText('AI revision ready. Save to keep it.',{exact:true}).waitFor();assert.equal(imageRequests,3);checks.push('explicit artwork regeneration');
   await selectChoice(page,page.getByLabel('Status',{exact:true}),'Scheduled');await page.locator('[name=scheduledAt]').fill('2026-11-02T10:00');
   await page.screenshot({path:'output/playwright/editor-desktop.png',fullPage:true});
   const png=page.waitForEvent('download');await page.getByRole('button',{name:'PNG',exact:true}).click();const file=await png;await file.saveAs('output/playwright/creative-export.png');
@@ -93,6 +125,23 @@ try{
   await page.setViewportSize({width:390,height:844});assert.ok(await page.getByRole('dialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1));await page.screenshot({path:'output/playwright/hybrid-editor-mobile.png'});checks.push('mobile editor fits viewport');
   await page.getByRole('button',{name:'Close',exact:true}).click();await page.screenshot({path:'output/playwright/studio-mobile.png',fullPage:true});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));checks.push('mobile studio fits viewport');
   await page.setViewportSize({width:1440,height:1000});await page.getByRole('button',{name:'Calendar',exact:true}).click();await page.getByRole('button',{name:'Plan my week',exact:true}).click();await selectChoice(page,page.getByLabel('Generation mode',{exact:true}),'Design templates');await page.getByRole('button',{name:'Create my week',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('[role=dialog]'));assert.equal(store.all('content').filter(c=>c.scheduledAt).length,6);checks.push('existing weekly planning');
+  await page.getByRole('button',{name:'Creative studio',exact:true}).click();
+  await page.getByRole('button',{name:'Edit AI campaign',exact:true}).click();
+  await page.getByRole('button',{name:'Version history',exact:true}).click();
+  const history=page.getByRole('region',{name:'Version history',exact:true});
+  await history.getByRole('heading',{name:created.headline,exact:true}).waitFor();
+  assert.equal(await history.getByRole('img',{name:created.headline,exact:true}).getAttribute('src'),created.rendered);
+  await history.getByRole('button',{name:'Restore as draft',exact:true}).click();
+  const restoreDialog=page.getByRole('alertdialog',{name:'Restore version 1?'});
+  await restoreDialog.getByRole('button',{name:'Restore version',exact:true}).click();
+  await page.getByText('Version restored and saved as a draft.',{exact:true}).waitFor();
+  assert.equal(await page.getByLabel('Status',{exact:true}).textContent(),'Draft');
+  assert.equal(await page.locator('[name=scheduledAt]').inputValue(),'');
+  await page.getByRole('button',{name:'Version history',exact:true}).click();
+  await history.getByRole('heading',{name:'A new perspective.',exact:true}).waitFor();
+  assert.equal(store.get('content',created.id).version,3);
+  await page.getByRole('button',{name:'Close',exact:true}).click();
+  checks.push('saved version history previews artwork and restores a draft while preserving history');
   await page.getByRole('button',{name:'Brand DNA',exact:true}).click();await page.getByLabel('Brand voice',{exact:true}).fill('Warm, direct, specific.');await page.getByRole('button',{name:'Save Brand DNA',exact:true}).click();await page.reload();await page.getByRole('button',{name:'Brand DNA',exact:true}).click();assert.equal(await page.getByLabel('Brand voice',{exact:true}).inputValue(),'Warm, direct, specific.');checks.push('brand persistence');
   const firstBrand=store.all('brand')[0].id;
   await page.getByRole('button',{name:'Assistant',exact:true}).click();
@@ -122,4 +171,4 @@ try{
   assert.deepEqual(errors,[]);assert.deepEqual(unexpectedResponses,[]);assert.deepEqual(unexpectedConsole,[]);assert.deepEqual(external,[]);checks.push('no browser errors, unexpected HTTP errors, console errors, or CSP violations','no external browser requests');
   writeFileSync('output/playwright/result.json',JSON.stringify({passed:true,checks,errors,external,consoleErrors,failedResponses},null,2));console.log(`Browser smoke passed: ${checks.length} workflow checks. Screenshots in output/playwright/.`);
 }catch(error){writeFileSync('output/playwright/result.json',JSON.stringify({passed:false,checks,error:error.stack,errors,external,consoleErrors,failedResponses},null,2));throw error;
-}finally{releaseRevision?.();releaseChat?.();await browser.close();await Promise.all([server.close(),new Promise(r=>modelServer.close(r))]);}
+}finally{releaseRevision?.();releaseChat?.();releaseArtwork?.();await browser.close();await Promise.all([server.close(),new Promise(r=>modelServer.close(r))]);}

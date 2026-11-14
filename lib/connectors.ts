@@ -1,14 +1,14 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
-import { fail, privateIP, readBounded, text } from './core.ts';
+import { fail, imageData, privateIP, readBounded, text } from './core.ts';
 import type { openStore } from './core.ts';
 
 const providers = ['buffer', 'metricool', 'zernio'];
 export const providerCatalog = [
   { id:'buffer',name:'Buffer',docs:'https://developers.buffer.com',notes:'Personal API key and organizationId. Public image URLs; no local upload.' },
   { id:'metricool',name:'Metricool',docs:'https://app.metricool.com/resources/apidocs/index.html',notes:'Advanced or Custom API plan; token, userId and blogId. Text delivery only.' },
-  { id:'zernio',name:'Zernio',docs:'https://docs.zernio.com',notes:'API key; optional profileId. Public image URLs; no local upload.' }
+  { id:'zernio',name:'Zernio',docs:'https://docs.zernio.com',notes:'API key; optional profileId. Upload saved artwork for drafts or use a public image URL.' }
 ];
 const limits = { facebook: 63206, instagram: 2200, linkedin: 3000, twitter: 280, threads: 500, bluesky: 300 };
 const platformName = value => { const name=String(value || '').toLowerCase(); return ['x','x/twitter'].includes(name) ? 'twitter' : name; };
@@ -27,6 +27,17 @@ export async function publicMediaURL(value: string, resolve: ResolveMediaHost = 
   if ([...url.searchParams.keys()].some(key=>/token|password|secret|signature|credential|api[-_]?key|x-amz-|x-goog-|^sig$|^key$/i.test(key))) fail('Media URLs must not contain credentials or signed access tokens.');
   const addresses = isIP(host) ? [{ address: host }] : await resolve(host, { all: true }).catch(() => fail('Media hostname could not be verified.'));
   if (!addresses.length || addresses.some(x => privateIP(x.address))) fail('Private or special-use media addresses are blocked.');
+  return url.href;
+}
+
+function zernioMediaUrl(value: unknown, upload: boolean) {
+  if (typeof value !== 'string') throw new Error('Missing Zernio media URL');
+  const url = new URL(value);
+  const allowed = upload
+    ? /^(?:[a-z0-9-]+\.)+r2\.cloudflarestorage\.com$/.test(url.hostname)
+    : url.hostname === 'media.zernio.com' && !url.search;
+  if (!allowed || url.protocol !== 'https:' || url.username || url.password || url.port || url.hash)
+    throw new Error('Unexpected Zernio media URL');
   return url.href;
 }
 
@@ -102,6 +113,25 @@ export function createConnectorService({ store, secretKey, fetchImpl = fetch, re
       throw Object.assign(new Error('Provider request did not return a confirmed result. Check the provider before trying again.'), { status:502 });
     }
   }
+  async function uploadZernioArtwork(connection, artwork: string) {
+    const match = /^data:(image\/(png|jpeg|webp));base64,(.+)$/.exec(artwork)!;
+    const [, contentType, format, base64] = match;
+    const bytes = Buffer.from(base64, 'base64');
+    const urls = await request(connection, 'https://zernio.com/api/v1/media/presign', {
+      filename: 'motif-creative.' + (format === 'jpeg' ? 'jpg' : format),
+      contentType,
+      size: bytes.length,
+    });
+    const uploadUrl = zernioMediaUrl(urls.uploadUrl, true);
+    const publicUrl = zernioMediaUrl(urls.publicUrl, false);
+    const response = await fetchImpl(uploadUrl, {
+      method: 'PUT', headers: { 'Content-Type': contentType }, body: bytes,
+      redirect: 'error', signal: AbortSignal.timeout(60_000),
+    });
+    await response.body?.cancel().catch(() => {});
+    if (!response.ok) throw new Error('Zernio artwork upload failed');
+    return publicUrl;
+  }
   async function accountsFor(c) {
     let accounts;
     if (c.provider === 'buffer') {
@@ -140,21 +170,44 @@ export function createConnectorService({ store, secretKey, fetchImpl = fetch, re
       if (typeof input.scheduledAt !== 'string' || !/(Z|[+-]\d{2}:\d{2})$/.test(input.scheduledAt) || !(Date.parse(input.scheduledAt) > Date.now()+60000)) fail('Schedule at least one minute in the future, with an explicit timezone.');
       scheduledAt=new Date(input.scheduledAt).toISOString();
     }
+    if (input.attachArtwork !== undefined && typeof input.attachArtwork !== 'boolean') fail('Choose whether to attach saved artwork.');
+    if (input.attachArtwork && (c.provider !== 'zernio' || input.mode !== 'draft' || input.mediaUrl))
+      fail('Saved artwork uploads are available for Zernio drafts. Choose either saved artwork or a public URL.');
+    const artwork = input.attachArtwork ? imageData(content.rendered) : '';
+    if (input.attachArtwork && !artwork) fail('Choose a creative with saved rendered artwork.');
     const mediaUrl=input.mediaUrl ? await publicMediaURL(input.mediaUrl,resolveMediaHost) : '';
     if (mediaUrl && c.provider === 'metricool') fail('Metricool image delivery requires a verified mediaId workflow. Export the local creative and attach it in Metricool.');
-    if (platform === 'instagram' && !mediaUrl) fail('Instagram requires a public image URL. Local images cannot be fetched by providers.');
+    if (platform === 'instagram' && !mediaUrl && !artwork) fail('Instagram requires artwork. Attach saved artwork where available or supply a public image URL.');
     if (input.mode === 'schedule' && platform === 'instagram') fail('Instagram scheduling needs network-specific publishing settings. Send a draft for review instead.');
-    const fingerprint=createHash('sha256').update(JSON.stringify([c.id,content.id,platform,input.accountId,input.mode,scheduledAt,body,mediaUrl])).digest('hex');
-    const previous=deliveries(c.brandId).find(d=>d.fingerprint === fingerprint);
+    const mediaFingerprint = artwork ? createHash('sha256').update(artwork).digest('hex') : mediaUrl;
+    const fingerprint=createHash('sha256').update(JSON.stringify([c.id,content.id,platform,input.accountId,input.mode,scheduledAt,body,mediaFingerprint])).digest('hex');
+    const previous=deliveries(c.brandId).find(d=>d.fingerprint === fingerprint && !d.retryable);
     if (previous) return { ...previous, duplicate:true };
     const accounts=await accountsFor(c);
     if (!accounts.some(a=>a.id === input.accountId && a.platform === platform)) fail('Choose a connected account returned by Test connection.');
     if (store.get('content',content.id).version !== content.version || scoped(c.id,c.brandId).version !== c.version) fail('Content or connection changed during review. Reload before sending.',409);
     if (scheduledAt && Date.parse(scheduledAt) <= Date.now()+30000) fail('Scheduled time is too close. Choose a later time.');
     // No await between duplicate check and journaling. Recheck after account lookup for concurrent clicks.
-    const concurrent=deliveries(c.brandId).find(d=>d.fingerprint === fingerprint);
+    const concurrent=deliveries(c.brandId).find(d=>d.fingerprint === fingerprint && !d.retryable);
     if (concurrent) return { ...concurrent, duplicate:true };
     let delivery=store.save('delivery',{brandId:c.brandId,connectionId:c.id,contentId:content.id,contentVersion:content.version,provider:c.provider,accountId:input.accountId,platform,mode:input.mode,scheduledAt,fingerprint,status:'sending'});
+    let attachmentUrl = mediaUrl;
+    if (artwork) {
+      let uploadError = '';
+      try {
+        attachmentUrl = await uploadZernioArtwork(c, artwork);
+        if (store.get('content', content.id).version !== content.version || scoped(c.id, c.brandId).version !== c.version) {
+          uploadError = 'Content or connection changed during upload. Reload and review before sending.';
+        }
+      } catch {
+        uploadError = 'Could not upload the artwork to Zernio. No draft was sent.';
+      }
+      if (uploadError) {
+        return store.save('delivery', {
+          ...delivery, status: 'failed', retryable: true, error: uploadError,
+        }, delivery.id, delivery.version);
+      }
+    }
     try {
       let remoteId;
       if (c.provider === 'buffer') {
@@ -163,7 +216,7 @@ export function createConnectorService({ store, secretKey, fetchImpl = fetch, re
         if (r.data?.createPost?.__typename !== 'PostActionSuccess') throw Object.assign(new Error('Buffer rejected the post. Review channel requirements in Buffer.'),{definitive:!!r.data?.createPost?.__typename});
         remoteId=r.data.createPost.post?.id;
       } else if (c.provider === 'zernio') {
-        const r=await request(c,'https://zernio.com/api/v1/posts',{content:body,platforms:[{platform,accountId:input.accountId}],isDraft:input.mode === 'draft',publishNow:false,...(scheduledAt ? {scheduledFor:scheduledAt,timezone:'UTC'} : {}),...(mediaUrl ? {mediaItems:[{type:'image',url:mediaUrl}]} : {})},{'Idempotency-Key':delivery.id});
+        const r=await request(c,'https://zernio.com/api/v1/posts',{content:body,platforms:[{platform,accountId:input.accountId}],isDraft:input.mode === 'draft',publishNow:false,...(scheduledAt ? {scheduledFor:scheduledAt,timezone:'UTC'} : {}),...(attachmentUrl ? {mediaItems:[{type:'image',url:attachmentUrl}]} : {})},{'Idempotency-Key':delivery.id});
         remoteId=r.post?._id;
       } else {
         const r=await request(c,metricURL(c,'/v2/scheduler/posts'),{text:body,providers:[{network:platform}],draft:input.mode === 'draft',publicationDate:{dateTime:(scheduledAt || new Date(Date.now()+86400000).toISOString()).slice(0,19),timezone:'UTC'},autoPublish:input.mode === 'schedule'});

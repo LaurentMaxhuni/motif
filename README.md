@@ -70,10 +70,10 @@ Open **Connections**, choose a provider, and save your API credentials locally. 
 | Provider | Configuration | Current media support |
 | --- | --- | --- |
 | Buffer | Personal API key and organization ID | Public HTTPS image URLs or text |
-| Zernio | API key | Public HTTPS image URLs or text |
+| Zernio | API key | Saved rendered artwork for drafts, public HTTPS image URLs, or text |
 | Metricool | API token, user ID, blog/brand ID; API-enabled plan | Text drafts/schedules; attach artwork in Metricool |
 
-Local PNG files and localhost URLs cannot be fetched by these external platforms. Motif does not automatically upload artwork. For Buffer/Zernio, host your export yourself and supply its public image URL; leaving it blank sends text only. Instagram requires image media and is draft-only in these connectors. Supported destinations include Facebook, Instagram drafts, LinkedIn, Twitter/X, Threads, and Bluesky; channel availability depends on your provider account.
+For a Zernio draft, choose a saved creation with a rendered image, select **Attach saved artwork**, and review the image, caption, and destination before sending. Motif uploads the image when you confirm the draft. If the upload fails, Motif keeps the review open for an explicit retry. For templates without a saved render, use a public HTTPS image URL or attach the export in the provider. Instagram drafts require image media. Supported destinations include Facebook, Instagram drafts, LinkedIn, Twitter/X, Threads, and Bluesky. Channel availability depends on your provider account.
 
 The selected saved creation and connection are version-checked before sending. Identical deliveries are suppressed. Delivery history includes the creation, account, outcome and remote ID. An uncertain result must be checked on the provider before another attempt. See [connector setup, contracts, and limits](docs/connectors.md). API contracts are fixture-tested; live credentials and provider-side acceptance remain unverified. No live posts were created during implementation.
 
@@ -94,10 +94,14 @@ Text uses `/chat/completions`; generation requests JSON-object output. Choose a 
 1. Configure a **text AI provider** and an **image AI provider** in Settings. Images can use Cloudflare Workers AI, a custom local URL or Unsloth Studio.
 2. In Creative studio enter a brief and start with **1 variation**. AI generates the complete design and artwork; no canvas editor is required.
 3. Motif asks the text model for copy, HTML, CSS, and an artwork prompt. It sends that prompt to the image model, embeds the returned artwork, and renders the result locally. Larger batches generate artwork sequentially and can take several minutes.
+
+   Studio shows the current stage and how many drafts are prepared. You can refresh or leave Studio and come back while Motif is running. Cancel to stop the batch, or retry a failed or cancelled job with the same brief and calendar dates. Drafts are saved together when the full batch is ready. Restarting the server clears job progress and retry history.
 4. Open the creation, describe a change, and click **Revise with AI**. Copy and composition are revised together. **Generate new artwork** replaces the artwork; leave it unchecked to preserve existing artwork. Older creations without artwork receive AI artwork on their first revision. **Undo revision** restores the previous preview. A revision returns to Draft and clears its scheduled date, requiring a new review. **Save creation** persists the preview; closing it discards unsaved changes. Invalid output or failed generation leaves the previous preview and saved creation intact.
 5. Download **PNG** for a ready-to-use creative, or **HTML** for a self-contained design with artwork embedded. Full caption/article/script text remains separately exportable. For email and SEO content the square is a promotional creative; the full copy is not squeezed into the image.
 
 This mode uses model-authored compositions, not the four SVG template layouts. Text stays separate from artwork. Current artwork generation is text-to-image; it does not send uploaded product photos to an image-editing model or guarantee exact product reproduction.
+
+Open **Version history** in the creative editor to preview earlier saved copy and artwork. **Restore as draft** saves the chosen version on the same creation, clears approval and scheduling, and keeps the previous version in history. History starts with the next save for existing creations. It lives in the SQLite database. Workspace JSON backups include current versions, and deleting a creation deletes its history.
 
 Rendering requires installed Chrome/Chromium/Edge. Windows Chrome and Edge, common Linux Chromium paths, and macOS Chrome are detected. Set `CHROME_PATH` if yours is elsewhere. Renderer and output documents block scripts and network access; HTML tags/attributes and CSS are validated before rendering. CSS parsing uses [CSSTree](https://github.com/csstree/csstree); local browser rendering uses [Playwright](https://playwright.dev/docs/api/class-browser).
 

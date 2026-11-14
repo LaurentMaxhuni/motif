@@ -30,7 +30,7 @@ export const staticRoutes: FastifyPluginAsync<{ root: string }> = async (
   );
   app.get("/assets/:filename", async (request, reply) => {
     const path = request.url.split("?")[0];
-    const asset = /^\/assets\/[a-zA-Z0-9_-]+\.(js|css|woff2?)$/.exec(path);
+    const asset = /^\/assets\/[a-zA-Z0-9_-]+\.(js|css|webp|woff2?)$/.exec(path);
     if (!asset || !existsSync(join(root, "dist" + path)))
       fail("Not found.", 404);
     const type =
@@ -38,7 +38,9 @@ export const staticRoutes: FastifyPluginAsync<{ root: string }> = async (
         ? "text/javascript"
         : asset[1] === "css"
           ? "text/css"
-          : "font/" + asset[1];
+          : asset[1] === "webp"
+            ? "image/webp"
+            : "font/" + asset[1];
     return reply
       .header("Cache-Control", "no-cache")
       .type(type + "; charset=utf-8")

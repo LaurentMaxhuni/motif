@@ -46,13 +46,19 @@ export function useResearch(scope: string) {
   return { running, progress, error, start, stop }
 }
 
-export function ResearchForm({ website, model, research, onResult, onWebsiteChange }: { website: string; model: string; research: ReturnType<typeof useResearch>; onResult: (result: Partial<Brand>) => void; onWebsiteChange?: (website: string) => void }) {
+export function ResearchForm({ website, model, research, onResult, onWebsiteChange, compact = false }: { website: string; model: string; research: ReturnType<typeof useResearch>; onResult: (result: Partial<Brand>) => void; onWebsiteChange?: (website: string) => void; compact?: boolean }) {
   const [url, setUrl] = useState(website), [limit, setLimit] = useState('12'), [useAI, setUseAI] = useState(Boolean(model))
-  return <form className="space-y-5" onSubmit={async event => { event.preventDefault(); const result = await research.start({ url, maxPages: Number(limit), useAI: Boolean(model) && useAI }); if (result) onResult(result) }}>
-    <div className="space-y-2"><Label htmlFor="research-url">Public website</Label><Input id="research-url" type="url" required value={url} onChange={event => { setUrl(event.target.value); onWebsiteChange?.(event.target.value) }} disabled={research.running} placeholder="https://yourbusiness.com" /></div>
+  const options = <div className="space-y-4">
     <div className="space-y-2"><Label htmlFor="research-limit">Page limit</Label><FieldSelect id="research-limit" value={limit} onValueChange={value=> setLimit(value)} disabled={research.running}><FieldSelectItem value="6">6 pages · focused</FieldSelectItem><FieldSelectItem value="12">12 pages · recommended</FieldSelectItem><FieldSelectItem value="20">20 pages · deep</FieldSelectItem></FieldSelect></div>
     <div className="flex items-start gap-3"><Checkbox id="research-ai" checked={Boolean(model) && useAI} onCheckedChange={value => setUseAI(value === true)} disabled={!model || research.running} /><div className="space-y-1"><Label htmlFor="research-ai">Interpret findings with my AI provider</Label><p className="text-xs text-muted-foreground">{model || 'No text model configured. Extraction works without one.'}</p></div></div>
     <p className="text-sm text-muted-foreground">Fetches public website pages. Extraction runs locally; optional interpretation uses your selected AI provider. Review findings before saving.</p>
+  </div>
+  return <form className="space-y-5" onSubmit={async event => { event.preventDefault(); const result = await research.start({ url, maxPages: Number(limit), useAI: Boolean(model) && useAI }); if (result) onResult(result) }}>
+    <div className="space-y-2"><Label htmlFor="research-url">Public website</Label><Input id="research-url" type="url" required value={url} onChange={event => { setUrl(event.target.value); onWebsiteChange?.(event.target.value) }} disabled={research.running} placeholder="https://yourbusiness.com" /></div>
+    {compact ? <details className="rounded-md border px-3 py-2">
+      <summary className="cursor-pointer text-sm font-medium">Research options</summary>
+      <div className="mt-4">{options}</div>
+    </details> : options}
     {research.error && <Alert variant="destructive"><AlertDescription>{research.error}</AlertDescription></Alert>}
     {research.running ? <div className="space-y-3" role="status" aria-live="polite"><Progress value={Math.min(95, Number(research.progress.pagesCompleted || research.progress.pages || 0) / Number(limit) * 100)} /><p className="break-all text-sm">{research.progress.message || research.progress.stage || 'Preparing website research…'} · {research.progress.pagesCompleted || research.progress.pages || 0} pages</p><Button type="button" variant="outline" onClick={research.stop}>Cancel analysis</Button></div> : <Button type="submit"><Search className="size-4" />Analyze website</Button>}
   </form>

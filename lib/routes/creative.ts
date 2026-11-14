@@ -3,7 +3,6 @@ import {
   text,
   contentInput,
   completion,
-  generate,
   revise,
 } from "../core.ts";
 import { renderDesign } from "../render.ts";
@@ -14,34 +13,6 @@ export const creativeRoutes: ApiRoutes = async (
   app,
   { store, settings, images },
 ) => {
-  app.post<BodyRequest>("/generate", async (request, reply) => {
-    const body = request.body;
-    const brand = store.get("brand", text(body.brandId, 100));
-    const generationSettings = settings();
-    if (body.mode === "hybrid") images.assertReady(generationSettings);
-    const generated = await generate(generationSettings, brand, body);
-    for (const item of generated)
-      if (item.design) {
-        item.image = await images.generate(
-          generationSettings,
-          item.design.imagePrompt,
-        );
-        item.rendered = (await renderDesign(item, brand)).rendered;
-      }
-    // Validate the entire model batch before saving anything.
-    const items = generated.map((item) =>
-      contentInput({ ...item, brandId: brand.id, status: "Draft" }, [brand.id]),
-    );
-    store.db.exec("BEGIN");
-    try {
-      const saved = items.map((i) => store.save("content", i));
-      store.db.exec("COMMIT");
-      return reply.code(201).send({ items: saved });
-    } catch (e) {
-      store.db.exec("ROLLBACK");
-      throw e;
-    }
-  });
   app.post<BodyRequest>("/revise", async (request, reply) => {
     const body = request.body;
     const saved = store.get("content", text(body.id, 100));

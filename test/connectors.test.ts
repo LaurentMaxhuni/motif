@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { openStore } from '../lib/core.ts';
 import { createConnectorService, publicMediaURL } from '../lib/connectors.ts';
+import { fixturePNG } from './fixtures.ts';
 
 const token='fixture-secret-token';
 const future=()=>new Date(Date.now()+3600000).toISOString();
@@ -12,7 +13,7 @@ function setup(provider='buffer', handler?: (call: { url: string; body: any } & 
   const content=store.save('content',{brandId:brand.id,channel:'LinkedIn',body:'Reviewed fixture caption',title:'Fixture',status:'Approved'});
   const calls=[];
   const fetchImpl=async(url,options)=>{
-    const call={url:String(url),...options,body:options.body ? JSON.parse(options.body) : undefined}; calls.push(call);
+    const call={url:String(url),...options,body:typeof options.body === 'string' ? JSON.parse(options.body) : options.body}; calls.push(call);
     if (handler) return handler(call,calls.length);
     if (call.body?.query?.includes('MotifChannels')) return Response.json({data:{channels:[{id:'account-1',name:'Fixture',service:'linkedin'}]}});
     if (call.body?.query?.includes('MotifCreatePost')) return Response.json({data:{createPost:{__typename:'PostActionSuccess',post:{id:'post-1'}}}});
@@ -142,6 +143,83 @@ test('successful and ambiguous deliveries suppress duplicates including concurre
   const y=setup('zernio',call=>{if(call.url.includes('/accounts')) return Response.json({accounts:[{_id:'account-1',platform:'linkedin'}]});throw new Error(`Network failed ${token}`);});t.after(()=>y.store.db.close());
   const uncertain=await y.service.send(y.input);assert.equal(uncertain.status,'uncertain');assert.ok(!JSON.stringify(uncertain).includes(token));
   const count=y.calls.length;assert.equal((await y.service.send(y.input)).duplicate,true);assert.equal(y.calls.length,count);
+});
+
+const uploadedArtwork = 'https://media.zernio.com/temp/motif-creative.png';
+const uploadTarget = 'https://fixture.r2.cloudflarestorage.com/temp/motif-creative.png?X-Amz-Signature=fixture';
+const fixtureAccount = { accounts: [{ _id: 'account-1', platform: 'linkedin' }] };
+
+test('Zernio uploads reviewed render bytes, then sends one draft on explicit retry', async t => {
+  const png = fixturePNG();
+  let putSucceeds = false;
+  const x = setup('zernio', call => {
+    if (call.url.endsWith('/accounts?profileId=507f1f77bcf86cd799439011')) return Response.json(fixtureAccount);
+    if (call.url.endsWith('/media/presign')) {
+      assert.deepEqual(call.body, { filename: 'motif-creative.png', contentType: 'image/png', size: png.length });
+      assert.equal((call.headers as Record<string,string>).Authorization, 'Bearer ' + token);
+      return Response.json({ uploadUrl: uploadTarget, publicUrl: uploadedArtwork });
+    }
+    if (call.method === 'PUT') {
+      assert.equal(call.url, uploadTarget);
+      assert.deepEqual(call.body, png);
+      assert.deepEqual(call.headers, { 'Content-Type': 'image/png' });
+      assert.equal(call.redirect, 'error');
+      return new Response(null, { status: putSucceeds ? 200 : 503 });
+    }
+    assert.equal(call.url, 'https://zernio.com/api/v1/posts');
+    assert.equal(call.body.content, x.content.body);
+    assert.equal(call.body.isDraft, true);
+    assert.equal(call.body.publishNow, false);
+    assert.deepEqual(call.body.mediaItems, [{ type: 'image', url: uploadedArtwork }]);
+    return Response.json({ post: { _id: 'draft-with-artwork' } });
+  });
+  t.after(() => x.store.db.close());
+  const rendered = 'data:image/png;base64,' + png.toString('base64');
+  const saved = x.store.save('content', { ...x.content, rendered }, x.content.id, x.content.version);
+  const input = { ...x.input, contentVersion: saved.version, attachArtwork: true };
+
+  const failed = await x.service.send(input);
+  assert.equal(failed.status, 'failed');
+  assert.equal(failed.retryable, true);
+  assert.match(failed.error, /No draft was sent/);
+  assert.equal(x.calls.some(call => call.url.endsWith('/posts')), false);
+  putSucceeds = true;
+  const results = await Promise.all([x.service.send(input), x.service.send(input)]);
+  assert.equal(results[0].id, results[1].id);
+  assert.equal(x.calls.filter(call => call.method === 'PUT').length, 2);
+  assert.equal(x.calls.filter(call => call.url.endsWith('/posts')).length, 1);
+  const duplicate = await x.service.send(input);
+  assert.equal(duplicate.status, 'draft');
+  assert.equal(duplicate.duplicate, true);
+  const journal = JSON.stringify(x.service.deliveries(x.brand.id));
+  assert.ok(!journal.includes(rendered) && !journal.includes(uploadTarget) && !journal.includes(token));
+});
+
+test('Zernio stops before draft creation when the upload target is unexpected or review changes during upload', async t => {
+  for (const stale of [false, true]) {
+    const rendered = 'data:image/png;base64,' + fixturePNG().toString('base64');
+    const x = setup('zernio', call => {
+      if (new URL(call.url).pathname.endsWith('/accounts')) return Response.json(fixtureAccount);
+      if (call.url.endsWith('/media/presign')) {
+        return Response.json({ uploadUrl: stale ? uploadTarget : 'https://other.example/upload', publicUrl: uploadedArtwork });
+      }
+      if (call.method === 'PUT') {
+        x.store.save('content', { ...saved, body: 'Edited while uploading' }, saved.id, saved.version);
+        return new Response(null, { status: 200 });
+      }
+      assert.fail('Unexpected draft request');
+    });
+    t.after(() => x.store.db.close());
+    const saved = x.store.save('content', { ...x.content, rendered }, x.content.id, x.content.version);
+    const input = { ...x.input, contentVersion: saved.version, attachArtwork: true };
+    await assert.rejects(x.service.send({ ...input, mode: 'schedule', scheduledAt: future() }), /Zernio drafts/);
+    assert.equal(x.calls.length, 0);
+    const result = await x.service.send(input);
+    assert.equal(result.status, 'failed');
+    assert.equal(result.retryable, true);
+    assert.equal(x.calls.some(call => call.url.endsWith('/posts')), false);
+    assert.equal(x.calls.some(call => call.method === 'PUT'), stale);
+  }
 });
 
 test('provider response errors and reflected credentials are redacted',async t=>{

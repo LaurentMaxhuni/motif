@@ -13,6 +13,7 @@ import { staticRoutes } from "./lib/routes/static.ts";
 import { workspaceRoutes } from "./lib/routes/workspace.ts";
 import { documentRoutes } from "./lib/routes/documents.ts";
 import { researchRoutes } from "./lib/routes/research.ts";
+import { generationRoutes } from "./lib/routes/generation.ts";
 import { creativeRoutes } from "./lib/routes/creative.ts";
 import { providersRoutes } from "./lib/routes/providers.ts";
 import { connectionsRoutes } from "./lib/routes/connections.ts";
@@ -86,6 +87,7 @@ export function createApp({
     documentRoutes,
     researchRoutes,
     creativeRoutes,
+    generationRoutes,
     providersRoutes,
     connectionsRoutes,
   ]) {

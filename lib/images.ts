@@ -96,9 +96,9 @@ export function createImageService({store,secretKey,fetchImpl=fetch}: { store: R
     try{const raw=Buffer.from(row.sealed as string,'base64'),decipher=createDecipheriv('aes-256-gcm',secretKey,raw.subarray(0,12));decipher.setAAD(Buffer.from('image:'+provider));decipher.setAuthTag(raw.subarray(-16));return Buffer.concat([decipher.update(raw.subarray(12,-16)),decipher.final()]).toString('utf8')}
     catch{fail('Image credentials could not be decrypted. Re-enter the API key in Settings.',409)}
   }
-  async function generate(settings: Partial<Settings>,prompt: unknown,overrides?: Record<string, string | null>){
+  async function generate(settings: Partial<Settings>,prompt: unknown,overrides?: Record<string, string | null>,signal?: AbortSignal){
     if(overrides)validateCredentials(overrides);
-    return generateProviderImage(settings,prompt,{apiKey:token(settings.imageProvider||'local',overrides),fetchImpl});
+    return generateProviderImage(settings,prompt,{apiKey:token(settings.imageProvider||'local',overrides),fetchImpl,signal});
   }
   function assertReady(settings: Partial<Settings>){
     imageSettings(settings);
