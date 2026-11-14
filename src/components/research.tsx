@@ -12,6 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { Download, Search } from 'lucide-react'
+import { BrandDNASummary } from '@/components/brand-dna-summary'
 
 async function bounded<T>(request: Promise<T>): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -23,7 +24,7 @@ export function useResearch(scope: string) {
   const [running, setRunning] = useState(false), [progress, setProgress] = useState<Analysis>({}), [error, setError] = useState('')
   function stop() { sequence.current++; const id = job.current; job.current = ''; if (id) void api('analysis/' + id, 'DELETE', {}).catch(() => {}); setRunning(false) }
   useEffect(() => { setError(''); setProgress({}); return () => { sequence.current++; const id = job.current; job.current = ''; if (id) void api('analysis/' + id, 'DELETE', {}).catch(() => {}) } }, [scope])
-  async function start(input: { url: string; maxPages: number; useAI: boolean }): Promise<Partial<Brand> | null> {
+  async function start(input: { url: string; maxPages: number; useAI: boolean; render: boolean }): Promise<Partial<Brand> | null> {
     stop(); const epoch = sequence.current; setRunning(true); setError(''); setProgress({}); let id = '', abandoned = false
     try {
       const creation = api<{ id: string }>('analysis', 'POST', input).then(created => { if (abandoned || epoch !== sequence.current) void api('analysis/' + created.id, 'DELETE', {}).catch(() => {}); return created })
@@ -47,13 +48,14 @@ export function useResearch(scope: string) {
 }
 
 export function ResearchForm({ website, model, research, onResult, onWebsiteChange, compact = false }: { website: string; model: string; research: ReturnType<typeof useResearch>; onResult: (result: Partial<Brand>) => void; onWebsiteChange?: (website: string) => void; compact?: boolean }) {
-  const [url, setUrl] = useState(website), [limit, setLimit] = useState('12'), [useAI, setUseAI] = useState(Boolean(model))
+  const [url, setUrl] = useState(website), [limit, setLimit] = useState('12'), [useAI, setUseAI] = useState(Boolean(model)), [render, setRender] = useState(true)
   const options = <div className="space-y-4">
     <div className="space-y-2"><Label htmlFor="research-limit">Page limit</Label><FieldSelect id="research-limit" value={limit} onValueChange={value=> setLimit(value)} disabled={research.running}><FieldSelectItem value="6">6 pages · focused</FieldSelectItem><FieldSelectItem value="12">12 pages · recommended</FieldSelectItem><FieldSelectItem value="20">20 pages · deep</FieldSelectItem></FieldSelect></div>
-    <div className="flex items-start gap-3"><Checkbox id="research-ai" checked={Boolean(model) && useAI} onCheckedChange={value => setUseAI(value === true)} disabled={!model || research.running} /><div className="space-y-1"><Label htmlFor="research-ai">Interpret findings with my AI provider</Label><p className="text-xs text-muted-foreground">{model || 'No text model configured. Extraction works without one.'}</p></div></div>
-    <p className="text-sm text-muted-foreground">Fetches public website pages. Extraction runs locally; optional interpretation uses your selected AI provider. Review findings before saving.</p>
+    <div className="flex items-start gap-3"><Checkbox id="research-ai" checked={Boolean(model) && useAI} onCheckedChange={value => setUseAI(value === true)} disabled={!model || research.running} /><div className="space-y-1"><Label htmlFor="research-ai">Ask AI to describe the brand</Label><p className="text-xs text-muted-foreground">{model ? `Uses ${model} to write up your voice, audience, values and positioning, quoting your pages.` : 'Connect a writing AI in Settings to turn this on. The scan works without it.'}</p></div></div>
+    <div className="flex items-start gap-3"><Checkbox id="research-render" checked={render} onCheckedChange={value => setRender(value === true)} disabled={research.running} /><div className="space-y-1"><Label htmlFor="research-render">Open pages in a browser</Label><p className="text-xs text-muted-foreground">Finds your real colors, fonts, logos and photos, and reads sites built with JavaScript. Adds about 20 seconds.</p></div></div>
+    <p className="text-sm text-muted-foreground">Motif reads public pages of your site on this computer. If you turn on AI, page text is sent to your writing AI. You review everything before it is saved.</p>
   </div>
-  return <form className="space-y-5" onSubmit={async event => { event.preventDefault(); const result = await research.start({ url, maxPages: Number(limit), useAI: Boolean(model) && useAI }); if (result) onResult(result) }}>
+  return <form className="space-y-5" onSubmit={async event => { event.preventDefault(); const result = await research.start({ url, maxPages: Number(limit), useAI: Boolean(model) && useAI, render }); if (result) onResult(result) }}>
     <div className="space-y-2"><Label htmlFor="research-url">Public website</Label><Input id="research-url" type="url" required value={url} onChange={event => { setUrl(event.target.value); onWebsiteChange?.(event.target.value) }} disabled={research.running} placeholder="https://yourbusiness.com" /></div>
     {compact ? <details className="rounded-md border px-3 py-2">
       <summary className="cursor-pointer text-sm font-medium">Research options</summary>
@@ -69,13 +71,14 @@ function Source({ url, children }: { url: string; children?: React.ReactNode }) 
 function Finding({ value, depth = 0 }: { value: any; depth?: number }) {
   if (value == null || value === '') return <p className="text-muted-foreground">No evidence found.</p>
   if (depth > 3) return <p className="text-muted-foreground">Additional detail in full report.</p>
+  if (typeof value === 'string' && /^data:image\/(?:png|jpeg|webp);base64,/.test(value)) return <img src={value} alt="" className="max-h-24 max-w-48 rounded border object-contain" />
   if (typeof value !== 'object') return <span className="whitespace-pre-wrap break-words">{String(value)}</span>
   if (Array.isArray(value)) return <ul className="list-disc space-y-2 pl-5">{value.slice(0, 16).map((entry, index) => <li key={index}><Finding value={entry} depth={depth + 1} /></li>)}{value.length > 16 && <li>More in full report.</li>}</ul>
   return <dl className="space-y-3">{Object.entries(value).filter(([key]) => !['text', 'paragraphs', 'links', 'excerpt'].includes(key)).slice(0, 24).map(([key, entry]) => <div key={key}><dt className="font-medium">{label(key)}</dt><dd className="mt-1 text-muted-foreground"><Finding value={entry} depth={depth + 1} /></dd></div>)}</dl>
 }
-export function ResearchReport({ analysis }: { analysis: Analysis }) {
+export function ResearchReport({ analysis, image, onUseImage }: { analysis: Analysis; image?: string; onUseImage?: (dataUrl: string) => void }) {
   const pages: Analysis[] = analysis.pages || [], evidence: Analysis[] = analysis.evidence || []
-  return <Card><CardHeader><div className="flex flex-wrap items-start justify-between gap-4"><div className="space-y-2"><CardTitle>Website research</CardTitle><CardDescription>{pages.length} pages · {evidence.length} evidence records · {['local-ai','cli-ai'].includes(analysis.mode) ? 'AI interpretation + evidence' : 'Local extraction'}</CardDescription></div><Button variant="outline" size="sm" onClick={() => download('motif-brand-analysis.json', JSON.stringify(analysis, null, 2), 'application/json')}><Download className="size-4" />Full report</Button></div></CardHeader><CardContent><Accordion type="multiple">
+  return <Card><CardHeader><div className="flex flex-wrap items-start justify-between gap-4"><div className="space-y-2"><CardTitle>Website research</CardTitle><CardDescription>{pages.length} pages · {evidence.length} evidence records · {['local-ai','cli-ai'].includes(analysis.mode) ? 'AI interpretation + evidence' : 'Local extraction'}</CardDescription></div><Button variant="outline" size="sm" onClick={() => download('motif-brand-analysis.json', JSON.stringify(analysis, null, 2), 'application/json')}><Download className="size-4" />Full report</Button></div></CardHeader><CardContent className="space-y-6"><BrandDNASummary analysis={analysis} image={image} onUseImage={onUseImage} /><Accordion type="multiple">
     {analysis.warnings?.length > 0 && <AccordionItem value="notes"><AccordionTrigger>Review notes & limitations</AccordionTrigger><AccordionContent><Finding value={analysis.warnings} /></AccordionContent></AccordionItem>}
     {Object.entries(analysis.findings || {}).map(([key, value]) => <AccordionItem key={key} value={'finding-' + key}><AccordionTrigger>{label(key)}</AccordionTrigger><AccordionContent><Finding value={value} /></AccordionContent></AccordionItem>)}
     <AccordionItem value="pages"><AccordionTrigger>Source pages & search audit</AccordionTrigger><AccordionContent><div className="space-y-5">{pages.map((page, index) => <article className="space-y-2 border-b pb-4 last:border-0" key={index}><h3 className="font-medium"><Source url={page.url}>{page.title || page.url}</Source></h3><p className="text-muted-foreground">{page.description || 'No meta description found.'}</p><p className="text-xs text-muted-foreground">{page.wordCount || 0} words</p>{page.seo && <Finding value={page.seo} />}</article>)}</div></AccordionContent></AccordionItem>

@@ -39,6 +39,8 @@ export const researchRoutes: ApiRoutes = async (
       url: text(body.url, 2000),
       maxPages: Number(body.maxPages || 12),
       useAI: body.useAI === true,
+      // Browser visual scan (colors, fonts, logos, images); the app turns it on by default.
+      render: body.render === true,
     };
     let target: URL;
     try {

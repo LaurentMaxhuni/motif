@@ -3,7 +3,7 @@ import type { Skill } from './types.ts';
 export const creativeDirection: Skill = {
   id: 'creative-direction',
   title: 'Creative direction',
-  stages: ['concept', 'layout', 'revision'],
+  stages: ['brief', 'concept', 'layout', 'revision'],
   instructions: `Work like the creative director of an independent agency presenting to a demanding client.
 - Start from one human insight about the audience (a tension, habit, desire or frustration), grounded in the supplied brand data. Never start from the product spec alone.
 - Turn the insight into one sharp idea that could be said in a sentence. Every visual and verbal choice must serve that idea; cut anything that does not.

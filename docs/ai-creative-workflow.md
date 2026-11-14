@@ -25,3 +25,13 @@ The concept and quality check are stored as `review` on the creation and shown i
 Craft knowledge lives in small, provider-independent modules under `lib/creative/skills/`: creative direction, advertising and copywriting, graphic design and composition, typography, brand consistency, art direction for image generation, and visual critique. Each declares the workflow stages it serves (`concept`, `copy`, `layout`, `artwork`, `critique`, `revision`) and optionally the content kinds it applies to; `skillPrompt(stage, { kind, channel })` composes the relevant ones under a stage role. Output contracts stay with the calling code and always win over skills. To add a skill, create a module exporting a `Skill` and add it to the registry in `skills/index.ts`.
 
 Every step uses the configured text provider (local endpoint or CLI) and image provider, so no stage depends on a specific model. Fixture tests verify the contracts and the audit against rendered pixels; real model quality still depends on the models you run.
+
+### Human voice and the brief builder
+
+The `human-voice` skill applies to every stage that writes words (brief, concept, copy, layout, revision). It bans the most recognisable AI writing tells: words such as "elevate", "unlock", "seamless" and "delve", "not just X, it's Y" reversals, rhythmic triplets, rhetorical-question openers, em dashes, exclamation marks and Title Case headlines, and asks for concrete details from the brand data instead.
+
+**Help me write a brief** in the studio calls `POST /api/brief` (`{brandId, kind, idea?, audience?, details?, current?}`). With a writing AI connected, the `brief` stage turns a rough idea, or nothing, into a labelled brief (goal, audience, message, proof, call to action, visual direction, tone) grounded in the Brand DNA, which the person can edit before using. Without a model, the dialog assembles the brief from the fields.
+
+### Choosing models
+
+Settings lists models for the selected writing AI automatically: Codex from its local model cache, Claude Code's aliases, OpenCode (`opencode models`), Pi (`pi --list-models`), OMP (`omp models`) and a local Ollama or LM Studio server from its `/models` endpoint. Listing never sends a prompt. Any model can still be typed by name. Each provider shows plain-language setup steps and links.

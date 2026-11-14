@@ -1,5 +1,5 @@
 import type { AddressInfo } from 'node:net';
-import { selectChoice } from './browser-helpers.ts'
+import { selectChoice, typeTextModel } from './browser-helpers.ts'
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
@@ -31,6 +31,7 @@ const modelServer=http.createServer(async(req,res)=>{
   }
   const input=JSON.parse(body.messages.at(-1).content);
   if(input.task==='creative-plan')return res.end(JSON.stringify({choices:[{message:{content:JSON.stringify({concepts:fixtureConcepts(input.count)})}}]}));
+  if(input.task==='creative-brief')return res.end(JSON.stringify({choices:[{message:{content:JSON.stringify({brief:'Goal: bring returning customers back.\nAudience: '+(input.audience||'regulars')})}}]}));
   if(input.instruction==='fail')return res.end(JSON.stringify({choices:[{message:{content:'invalid JSON'}}]}));
   if(input.instruction==='delay')await new Promise(r=>releaseRevision=r);
   const item={title:input.current?.title||'AI campaign',headline:input.instruction?'A new perspective.':'Make everyday matter.',subhead:'A little intention goes a long way.',body:'A saved caption with <script>literal text</script>.',cta:'Explore the collection',design:{...fixtureDesign,css:fixtureDesign.css+(input.instruction?'.ad{background:#ebe1f0}':'')}};
@@ -49,31 +50,31 @@ await page.addInitScript(()=>document.addEventListener('securitypolicyviolation'
 page.on('request',req=>{if(!req.url().startsWith(origin)&&!req.url().startsWith('data:')&&!req.url().startsWith('blob:'))external.push(req.url());});
 const revise=async instruction=>{await page.getByLabel('Describe your changes').fill(instruction);await page.getByRole('button',{name:'Revise with AI',exact:true}).click();};
 try{
-  await page.goto(origin+'/app');await page.getByRole('heading',{name:'What will you create next?'}).waitFor();
+  await page.goto(origin+'/app');await page.getByRole('heading',{name:'New creative'}).waitFor();
   const creativeBrief = page.getByRole('textbox', { name: 'Creative brief' });
-  const openBuilder = page.getByRole('button', { name: 'Build a prompt' });
-  const builder = page.getByRole('dialog', { name: 'Build a prompt' });
+  const openBuilder = page.getByRole('button', { name: 'Help me write a brief' });
+  const builder = page.getByRole('dialog', { name: 'Write a brief' });
   await creativeBrief.fill('Keep the summer color palette.');
   await openBuilder.click();
-  assert.equal(await builder.getByRole('button', { name: 'Use prompt' }).isDisabled(), true);
+  assert.equal(await builder.getByRole('button', { name: 'Use this brief' }).isDisabled(), true);
   await selectChoice(page, builder.getByRole('combobox', { name: 'Content type' }), 'Email');
-  await builder.getByRole('button', { name: 'Load example' }).click();
-  assert.match(await builder.getByLabel('Topic').inputValue(), /welcome/i);
-  await builder.getByLabel('Topic').fill('Summer collection');
-  await builder.getByLabel('Audience (optional)').fill('Returning customers');
-  await builder.getByRole('button', { name: 'Use prompt' }).click();
+  // Before a writing AI is connected the builder writes the brief from the fields.
+  assert.equal(await builder.getByRole('button', { name: 'Write it with AI' }).count(), 0);
+  await builder.getByLabel(/What is it about/).fill('Summer collection');
+  await builder.getByLabel('Who is it for? (optional)').fill('Returning customers');
+  await builder.getByRole('button', { name: 'Use this brief' }).click();
   await builder.waitFor({ state: 'hidden' });
   assert.match(await creativeBrief.inputValue(), /^Keep the summer color palette\.\n\nCreate an email about Summer collection\./);
   assert.match(await creativeBrief.inputValue(), /Audience: Returning customers/);
   assert.equal(await page.getByRole('combobox', { name: 'Content type' }).textContent(), 'Email');
   await openBuilder.click();
-  await builder.getByLabel('Topic').fill('An abandoned draft');
+  await builder.getByLabel(/What is it about/).fill('An abandoned draft');
   await page.keyboard.press('Escape');
   await builder.waitFor({ state: 'hidden' });
   assert.doesNotMatch(await creativeBrief.inputValue(), /abandoned draft/);
   await creativeBrief.fill('');
   await selectChoice(page, page.getByRole('combobox', { name: 'Content type' }), 'Social post');
-  checks.push('prompt examples and editable briefs preserve existing text');
+  checks.push('AI brief builder drafts an editable brief and preserves existing text');
   assert.equal(await page.locator('.content-card').count(),4);
   const legacyCard=page.locator('.content-card').filter({has:page.locator('.preview-button svg')}).first();
   const dimensions=await legacyCard.evaluate(card=>{const button=card.querySelector('.preview-button').getBoundingClientRect(),svg=card.querySelector('svg').getBoundingClientRect();return {button:button.width,width:svg.width,height:svg.height};});
@@ -86,14 +87,21 @@ try{
   const legacyBytes=readFileSync('output/playwright/legacy-export.png');assert.equal(legacyBytes.readUInt32BE(16),1080);assert.equal(legacyBytes.readUInt32BE(20),1080);checks.push('legacy SVG and 1080x1080 PNG exports');
   await page.getByRole('button',{name:'Close',exact:true}).click();
   assert.equal(await page.getByRole('combobox',{name:'Number of variations'}).textContent(),'1 variation');checks.push('full AI creation defaults');
-  await page.getByRole('button',{name:'Create content',exact:true}).click();await page.getByText(/Choose an image model/).waitFor();assert.equal(store.all('content').length,4);checks.push('missing models show errors without template fallback');
+  await page.getByRole('button',{name:'Create',exact:true}).click();await page.getByText(/Choose an image model/).waitFor();assert.equal(store.all('content').length,4);checks.push('missing models show errors without template fallback');
   await page.getByRole('button',{name:'Settings',exact:true}).click();
   for(const name of ['textEndpoint','imageEndpoint'])await page.locator(`#${name.replace('Endpoint','-endpoint')}`).fill(modelOrigin);
-  await page.locator('#text-model').fill('fixture-text');await page.locator('#image-model').fill('fixture-image');await page.getByRole('button',{name:'Save settings',exact:true}).click();
+  await typeTextModel(page,'fixture-text');await page.locator('#image-model').fill('fixture-image');await page.getByRole('button',{name:'Save settings',exact:true}).click();
+  await page.getByText('AI settings saved.',{exact:true}).last().waitFor();
+  await page.getByRole('button',{name:'Creative studio',exact:true}).click();
+  await page.getByRole('button',{name:'Help me write a brief'}).click();
+  await page.getByRole('dialog',{name:'Write a brief'}).getByRole('button',{name:'Write it with AI'}).click();
+  await page.getByLabel('Your brief').waitFor();assert.match(await page.getByLabel('Your brief').inputValue(),/^Goal: bring returning customers back\./);
+  await page.getByRole('button',{name:'Use this brief'}).click();assert.match(await page.getByRole('textbox',{name:'Creative brief'}).inputValue(),/Goal: bring returning customers back/);
+  await page.getByRole('textbox',{name:'Creative brief'}).fill('');checks.push('AI brief builder drafts an editable brief once a writing AI is connected');
   await page.getByRole('button',{name:'Creative studio',exact:true}).click();
   pauseArtwork=true;
   await page.locator('#brief').fill('A thoughtful product launch');
-  await page.getByRole('button',{name:'Create content',exact:true}).click();
+  await page.getByRole('button',{name:'Create',exact:true}).click();
   await page.getByText(/Generating artwork for draft 1/).waitFor();
   await page.getByRole('button',{name:'Calendar',exact:true}).click();
   await page.getByRole('heading',{name:'Content calendar',exact:true}).waitFor();
@@ -180,8 +188,8 @@ try{
   const secondBrand=store.all('brand').find(b=>b.id!==firstBrand).id;
   await selectChoice(page,page.getByRole('combobox',{name:'Active brand'}),store.get('brand',firstBrand).name);await page.getByRole('button',{name:'Assistant',exact:true}).click();
   await page.getByLabel('Message to brand assistant').fill('delay-chat');await page.getByRole('button',{name:'Send',exact:true}).click();
-  await page.getByText('Thinking with your selected AI provider…',{exact:true}).waitFor();await Promise.race([delayedChatStarted,new Promise((_,reject)=>setTimeout(()=>reject(new Error('Delayed chat fixture was not reached.')),15000))]);
-  await selectChoice(page,page.getByRole('combobox',{name:'Active brand'}),store.get('brand',secondBrand).name);await page.getByRole('heading',{name:'Find your next direction',exact:true}).waitFor();
+  await page.getByText('Writing a reply…',{exact:true}).waitFor();await Promise.race([delayedChatStarted,new Promise((_,reject)=>setTimeout(()=>reject(new Error('Delayed chat fixture was not reached.')),15000))]);
+  await selectChoice(page,page.getByRole('combobox',{name:'Active brand'}),store.get('brand',secondBrand).name);await page.getByRole('heading',{name:'Ask about your brand',exact:true}).waitFor();
   const chatResponse=page.waitForResponse(r=>r.url().endsWith('/api/chat'));releaseChat();await chatResponse;
   assert.equal(await page.getByRole('log').getByText('Fixture advice: delay-chat',{exact:true}).count(),0);assert.equal(await page.getByLabel('Message to brand assistant').inputValue(),'');assert.equal(await page.getByRole('button',{name:'Send',exact:true}).isDisabled(),true);checks.push('assistant ignores late response after brand switch');
   await page.getByRole('button',{name:'Settings',exact:true}).click();

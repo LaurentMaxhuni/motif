@@ -10,17 +10,21 @@ const hideText = '*,*::before,*::after{color:transparent!important;text-shadow:n
 /** Runs in the page. */
 function injectStyle(css: string){const style=document.createElement('style');style.textContent=css;document.head.append(style);}
 
+export function chromePath(){
+  return process.env.CHROME_PATH||[
+    'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+    '/usr/bin/chromium','/usr/bin/chromium-browser','/usr/bin/google-chrome',
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+  ].find(existsSync);
+}
+
 let pending: Promise<unknown>=Promise.resolve();
 export function renderDesign(...[item,brand,signal]: [...Parameters<typeof designDocument>, signal?: AbortSignal]){
   // Bound browser memory when multiple generation requests finish together.
   const job=pending.then(async()=>{
     signal?.throwIfAborted();
-    const executablePath=process.env.CHROME_PATH||[
-      'C:/Program Files/Google/Chrome/Application/chrome.exe',
-      'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
-      '/usr/bin/chromium','/usr/bin/chromium-browser','/usr/bin/google-chrome',
-      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-    ].find(existsSync);
+    const executablePath=chromePath();
     let browser: Browser | undefined;
     const cancel = () => { void browser?.close().catch(() => {}); };
     try{

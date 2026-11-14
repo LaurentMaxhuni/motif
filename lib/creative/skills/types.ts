@@ -4,6 +4,7 @@
  * define output formats; each stage owns its own contract.
  */
 export type SkillStage =
+  | 'brief'     // turning a rough idea into a creative brief
   | 'concept'   // creative direction: choosing what to say and how it should look
   | 'copy'      // writing headlines, body and CTAs
   | 'layout'    // building the HTML/CSS composition and its artwork brief

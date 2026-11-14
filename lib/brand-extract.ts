@@ -159,7 +159,16 @@ export function extractPage(html: string, url: string) {
   const css = $('style').map((_, el) => $(el).text()).get().join('\n').slice(0, 300000) + '\n' + $('[style]').slice(0, 1000).map((_, el) => '.inline{' + $(el).attr('style') + '}').get().join('\n').slice(0, 100000);
   const styles = extractStyles(css), theme = color(meta('theme-color'));
   const logos = $('img').filter((_, el) => /logo|brand/i.test([$(el).attr('alt'), $(el).attr('class'), $(el).attr('id'), $(el).attr('src')].join(' '))).slice(0, 8).map((_, el) => ({ url: asset($(el).attr('src') || $(el).attr('data-src') || $(el).attr('srcset')?.split(',')[0].trim().split(/\s+/)[0]), alt: clean($(el).attr('alt')).slice(0, 200) })).get();
-  const visuals = { colors: unique([theme, ...styles.colors]).slice(0, 20), fonts: styles.fonts, colorSignals: [...(theme ? [{ color: theme, role: 'theme', weight: 3 }] : []), ...styles.colorSignals].slice(0, 60), logos: [...new Map([...logos, ...schemaLogos].filter(v => v.url).map(v => [v.url, v])).values()].slice(0, 8), socialImage: asset(meta('og:image') || meta('twitter:image')), stylesheets: $('link[rel="stylesheet"][href]').slice(0, 15).map((_, el) => asset($(el).attr('href'))).get().filter(Boolean) };
+  const icons = $('link[rel][href]').filter((_, el) => /(?:^|\s)(?:icon|apple-touch-icon|mask-icon)(?:\s|$)/i.test($(el).attr('rel') || '')).slice(0, 8).map((_, el) => asset($(el).attr('href'))).get().filter(Boolean);
+  const largest = (srcset = '') => srcset.split(',').map(part => part.trim().split(/\s+/)).filter(([src]) => src).sort((a, b) => parseFloat(b[1] || '0') - parseFloat(a[1] || '0'))[0]?.[0];
+  const images = unique($('img,picture source').slice(0, 300).map((_, el) => {
+    const node = $(el), marker = [node.attr('alt'), node.attr('class'), node.attr('id'), node.attr('src')].join(' ');
+    const width = Number(node.attr('width') || 0), height = Number(node.attr('height') || 0);
+    if (/logo|icon|avatar|sprite|pixel|tracking|badge/i.test(marker) || (width && width < 200) || (height && height < 150)) return '';
+    const src = asset(largest(node.attr('srcset') || node.attr('data-srcset')) || node.attr('data-src') || node.attr('src'));
+    return /\.(?:svg|gif)(?:$|\?)/i.test(src) ? '' : src;
+  }).get()).slice(0, 20);
+  const visuals = { icons, images, colors: unique([theme, ...styles.colors]).slice(0, 20), fonts: styles.fonts, colorSignals: [...(theme ? [{ color: theme, role: 'theme', weight: 3 }] : []), ...styles.colorSignals].slice(0, 60), logos: [...new Map([...logos, ...schemaLogos].filter(v => v.url).map(v => [v.url, v])).values()].slice(0, 8), socialImage: asset(meta('og:image') || meta('twitter:image')), stylesheets: $('link[rel="stylesheet"][href]').slice(0, 15).map((_, el) => asset($(el).attr('href'))).get().filter(Boolean) };
   const imageCount = $('img').length, missingAlt = $('img:not([alt])').length;
   const robots = meta('robots'), language = clean($('html').attr('lang')).slice(0, 60);
   // Capture crawl/visual evidence before removing chrome; preserve editorial hero headers.

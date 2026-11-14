@@ -75,7 +75,7 @@ try {
   await page.locator('header').getByRole('link', { name: 'Try Motif', exact: true }).click()
   await page.getByLabel('Business name', { exact: true }).waitFor()
   assert.equal(new URL(page.url()).pathname, '/app')
-  const welcome = page.getByRole('heading', { name: 'Make it unmistakably yours.', exact: true })
+  const welcome = page.getByRole('heading', { name: 'Posts and ads that look like you made them.', exact: true })
   assert.ok(await welcome.evaluate(el => getComputedStyle(el).fontFamily.includes('Bricolage Grotesque')), 'onboarding display font loaded')
   assert.ok(await page.locator('link[rel="stylesheet"]').evaluateAll(links => links.every(el => !el.href.includes('Marketing-'))), 'public stylesheet must not load in app')
   checks += 4

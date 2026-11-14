@@ -22,7 +22,11 @@ const brokenDesign = {
 test('skills are composed per workflow stage and content kind', () => {
   assert.equal(new Set(skills.map(skill => skill.id)).size, skills.length);
   const ids = (stage: Parameters<typeof skillsFor>[0], kind = 'Ad creative') => skillsFor(stage, { kind }).map(skill => skill.id);
-  assert.deepEqual(ids('concept'), ['creative-direction', 'advertising', 'graphic-design', 'brand-consistency', 'image-generation']);
+  assert.deepEqual(ids('concept'), ['creative-direction', 'advertising', 'graphic-design', 'brand-consistency', 'image-generation', 'human-voice']);
+  assert.deepEqual(ids('brief'), ['creative-direction', 'advertising', 'brand-consistency', 'human-voice']);
+  assert.ok(ids('copy', 'Email').includes('human-voice'));
+  assert.match(skillPrompt('copy', { kind: 'Email' }), /no em dashes/);
+  assert.doesNotMatch(skills.map(skill => typeof skill.instructions === 'string' ? skill.instructions : skill.instructions({ kind: 'Ad creative', channel: 'Instagram' })).join(''), /—/);
   assert.ok(ids('critique').includes('visual-critique') && !ids('critique').includes('advertising'));
   assert.ok(!ids('layout').includes('visual-critique'));
   // Visual craft does not leak into non-visual formats.

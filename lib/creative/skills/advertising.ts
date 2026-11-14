@@ -17,11 +17,11 @@ const channelNotes: Record<string, string> = {
 export const advertising: Skill = {
   id: 'advertising',
   title: 'Advertising and copywriting',
-  stages: ['concept', 'copy', 'layout', 'revision'],
+  stages: ['brief', 'concept', 'copy', 'layout', 'revision'],
   instructions: ({ kind, channel }: SkillContext) => [
     `Write like a senior copywriter. Copy is the idea made verbal, not a description of the image.
 - Headline: one thought, concrete and specific, max 8 words. Prefer a tension, a twist, a confident claim the brand can honestly make, or a vivid image. No puns that need explaining, no "Elevate your…", "Unlock…", "Discover the power of…", "Introducing…", or exclamation marks.
-- Subhead (if used): adds the missing information the headline withholds — what it is or why it matters — in one short line.
+- Subhead (if used): adds the missing information the headline withholds (what it is or why it matters) in one short line.
 - CTA: a specific verb plus outcome ("Book a tasting", "Shop the linen edit"), 2–4 words. Never "Click here" or "Learn more" when something more specific is true. In a post the CTA is a line of type (the platform supplies the button), not a web button.
 - Show, then tell: let the visual carry emotion and the words carry meaning. Do not repeat in words what the image already shows.
 - Write in the brand's voice and language. Use the audience's vocabulary, not marketing jargon.

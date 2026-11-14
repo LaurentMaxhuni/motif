@@ -6,7 +6,7 @@ import campaignArt from '@/assets/motif-campaign.webp'
 import './welcome-landing.css'
 
 const steps = [
-  { title: 'Find your voice', description: 'Use your website or write your own Brand DNA. Review the details before saving.' },
+  { title: 'Add your brand', description: 'Use your website or write your own Brand DNA. Review the details before saving.' },
   { title: 'Make a campaign', description: 'Turn a brief into on-brand copy and artwork with your chosen models.' },
   { title: 'Make it yours', description: 'Revise, compare saved versions, and export the creative when it’s ready.' },
 ]
@@ -23,9 +23,9 @@ export function WelcomeLanding({ children }: { children: ReactNode }) {
 
     <section className="welcome-hero" aria-labelledby="welcome-title">
       <div className="welcome-intro">
-        <p className="welcome-eyebrow">Your local creative studio</p>
-        <h1 id="welcome-title">Make it <em>unmistakably</em> yours.</h1>
-        <p className="welcome-lede">Give your brand a voice, then make the campaign only you could make. Research, create, and review from one local workspace.</p>
+        <p className="welcome-eyebrow">Creative studio on your computer</p>
+        <h1 id="welcome-title">Posts and ads that look like <em>you</em> made them.</h1>
+        <p className="welcome-lede">Point Motif at your website. It learns your colors, logo and way of writing, then makes posts, ads and emails you can edit and export.</p>
         <a className="welcome-cta" href="#brand-setup">Set up my brand <ArrowDown aria-hidden="true" /></a>
       </div>
       <figure className="welcome-figure">

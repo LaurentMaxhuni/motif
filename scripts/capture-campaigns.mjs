@@ -38,7 +38,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 })
   await page.addInitScript(() => localStorage.setItem('motif-theme', 'dark'))
   await page.goto(base + '/app')
-  await page.getByRole('heading', { name: 'What will you create next?' }).waitFor()
+  await page.getByRole('heading', { name: 'New creative' }).waitFor()
   await page.locator('[data-sidebar="menu-button"]').filter({ hasText: /^Workspace$/ }).click()
   await page.getByRole('heading', { name: 'Workspace', exact: true }).waitFor()
   await page.screenshot({ path: `${folder}/workspace-dark.jpg`, type: 'jpeg', quality: 90 })

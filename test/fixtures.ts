@@ -10,8 +10,8 @@ export const fixtureConcept={name:'Slow morning',insight:'People want rituals, n
 export const fixtureConcepts=(count:number)=>Array.from({length:count},(_,i)=>({...fixtureConcept,name:`Route ${i+1}`}));
 
 // A deterministic PNG fixture, not model output. Avoid an external image dependency in tests.
-export function fixturePNG(){
-  const size=256,raw=Buffer.alloc((size*4+1)*size);
+export function fixturePNG(size=256){
+  const raw=Buffer.alloc((size*4+1)*size);
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){const i=y*(size*4+1)+1+x*4;const sphere=(x-125)**2+(y-140)**2<78**2;raw[i]=sphere?197:236;raw[i+1]=sphere?106+Math.floor(x/8):187-Math.floor(y/12);raw[i+2]=sphere?89+Math.floor(y/12):173;raw[i+3]=255;}
   const crc32=buffer=>{let crc=0xffffffff;for(const b of buffer){crc^=b;for(let n=0;n<8;n++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return (crc^0xffffffff)>>>0;};
   const chunk=(name,data)=>{const type=Buffer.from(name);const out=Buffer.alloc(data.length+12);out.writeUInt32BE(data.length,0);type.copy(out,4);data.copy(out,8);out.writeUInt32BE(crc32(Buffer.concat([type,data])),data.length+8);return out;};

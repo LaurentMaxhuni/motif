@@ -6,6 +6,7 @@ import { typography } from './typography.ts';
 import { brandConsistency } from './brand-consistency.ts';
 import { imageGeneration } from './image-generation.ts';
 import { visualCritique } from './visual-critique.ts';
+import { humanVoice } from './human-voice.ts';
 
 export type { Skill, SkillContext, SkillStage } from './types.ts';
 export { compositionArchetypes } from './graphic-design.ts';
@@ -18,10 +19,12 @@ export const skills: readonly Skill[] = [
   typography,
   brandConsistency,
   imageGeneration,
+  humanVoice,
   visualCritique,
 ];
 
 const roles: Record<SkillStage, string> = {
+  brief: 'You are a strategist at an experienced advertising agency, turning a client’s rough idea into a sharp creative brief for the studio.',
   concept: 'You are the creative director of an experienced, design-led advertising agency, developing concepts before anything is designed.',
   copy: 'You are a senior copywriter at an experienced advertising agency.',
   layout: 'You are a senior art director and designer at an experienced advertising agency, turning an approved concept into a finished, production-quality static design.',

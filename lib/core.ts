@@ -35,11 +35,16 @@ export function imageData(value: unknown) {
 type BrandFields = Omit<Brand, 'id' | 'version'>;
 type ContentFields = Omit<Content, 'id' | 'version'>;
 
+function brandColors(value: unknown) {
+  const list = Array.isArray(value) ? value.slice(0, 7) : [];
+  if (list.length > 6) fail('Use at most six brand colors.');
+  return [color(list[0] || '#d95279'), color(list[1] || '#243c32'), ...list.slice(2).map(item => color(item))];
+}
 export function brandInput(b: Record<string, any>): BrandFields {
   const name = text(b.name, 100); if (!name) fail('Brand name is required.');
   let website = text(b.website || '', 2000);
   if (website) { let u; try { u = new URL(website); } catch { fail('Enter a valid HTTP(S) website.'); } if (!['http:', 'https:'].includes(u.protocol) || u.username || u.password) fail('Enter a valid HTTP(S) website.'); website = u.href; }
-  return { name, website, description: text(b.description || '', 8000), audience: text(b.audience || '', 2000), voice: text(b.voice ?? 'Clear, warm, confident', 2000), product: text(b.product || '', 2000), colors: [color(b.colors?.[0] || '#d95279'), color(b.colors?.[1] || '#243c32')], image: imageData(b.image), source: text(b.source || 'Manual', 100),goal:text(b.goal||'',500),industry:text(b.industry||'',200),language:text(b.language||'English',100),...(b.analysis?{analysis:analysisInput(b.analysis)}:{}) };
+  return { name, website, description: text(b.description || '', 8000), audience: text(b.audience || '', 2000), voice: text(b.voice ?? 'Clear, warm, confident', 2000), product: text(b.product || '', 2000), colors: brandColors(b.colors), image: imageData(b.image), source: text(b.source || 'Manual', 100),goal:text(b.goal||'',500),industry:text(b.industry||'',200),language:text(b.language||'English',100),...(b.analysis?{analysis:analysisInput(b.analysis)}:{}) };
 }
 export function contentInput(c: Record<string, any>, brandIds: string[]): ContentFields {
   if (!brandIds.includes(c.brandId)) fail('Choose an existing brand.');
@@ -155,9 +160,12 @@ export interface PublicDocumentOptions {
   signal?: AbortSignal;
   onRequest?: (url: string) => void;
   onBytes?: (bytes: number) => void;
+  /** Return raw bytes (for images, fonts, scripts) instead of decoded text. */
+  binary?: boolean;
 }
 
-export interface PublicDocument { html: string; url: string }
+export interface PublicDocument { html: string; url: string; body?: Buffer; contentType?: string }
+const mimeAllowed = (allowed: string[], mime: string) => allowed.some(type => type === '*/*' || type === mime || (type.endsWith('/*') && mime.startsWith(type.slice(0, -1))));
 
 export async function publicDocument(rawUrl: string, redirects = 0, options: PublicDocumentOptions = {}): Promise<PublicDocument> {
   let u; try { u = new URL(rawUrl); } catch { fail('Enter a full website URL, including https://.'); }
@@ -181,7 +189,7 @@ export async function publicDocument(rawUrl: string, redirects = 0, options: Pub
       response=res;
       if ([301,302,303,307,308].includes(res.statusCode)) { res.destroy(); if(res.headers.location)resolve({ redirect: res.headers.location });else reject(new Error('Website redirect has no location.')); return; }
       const mime=(res.headers['content-type']||'').split(';')[0].trim().toLowerCase();
-      if (res.statusCode !== 200 || !allowedMime.includes(mime)) { res.destroy(); reject(Object.assign(new Error(`Website returned HTTP ${res.statusCode} or an unsupported document type.`),{status:422,statusCode:res.statusCode})); return; }
+      if (res.statusCode !== 200 || !mimeAllowed(allowedMime, mime)) { res.destroy(); reject(Object.assign(new Error(`Website returned HTTP ${res.statusCode} or an unsupported document type.`),{status:422,statusCode:res.statusCode})); return; }
       const encoding=(res.headers['content-encoding']||'identity').trim().toLowerCase();
       const decompress=encoding==='gzip'?createGunzip:encoding==='deflate'?createInflate:encoding==='br'?createBrotliDecompress:null;
       if(encoding!=='identity'&&!decompress){res.destroy();reject(new Error('Website returned an unsupported content encoding.'));return;}
@@ -194,6 +202,7 @@ export async function publicDocument(rawUrl: string, redirects = 0, options: Pub
       pipeline([res,counter,...(decompress?[decompress()]:[]),collect],{signal}).then(()=>{
         const charset=/charset\s*=\s*["']?([^\s;"']+)/i.exec(res.headers['content-type']||'')?.[1]||'utf-8';
         let decoder;try{decoder=new TextDecoder(charset);}catch{decoder=new TextDecoder('utf-8');}
+        if(options.binary){resolve({html:'',url:u.href,body:Buffer.concat(chunks),contentType:mime});return;}
         resolve({html:decoder.decode(Buffer.concat(chunks)),url:u.href});
       },error=>{req.destroy();reject(error);});
     });
