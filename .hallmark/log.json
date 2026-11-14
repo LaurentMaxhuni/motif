@@ -1,0 +1,133 @@
+[
+ {
+  "mode": "redesign",
+  "depth": "full",
+  "scope": "site",
+  "shape": "Creative showcase",
+  "theme": "AppLlama-informed custom",
+  "axes": "dark/grotesk-sans/cream",
+  "hero": "Corridor",
+  "nav": "centered",
+  "footer": "wordmark close",
+  "imagery": "Original Motif-rendered campaigns and real in-memory desktop and phone workspace captures",
+  "photos": [],
+  "entry": "src/marketing/Marketing.tsx",
+  "fingerprint": [
+   "campaign showcase",
+   "centered gallery",
+   "centered navigation",
+   "wordmark close",
+   "original campaigns and actual app",
+   "brand/revision inputs and source setup"
+  ],
+  "sections": [
+   "Campaign hero",
+   "Workspace",
+   "Brand DNA and revisions",
+   "Open-source setup",
+   "Wordmark close"
+  ],
+  "signature": "Original poppy campaigns composed through the actual Motif renderer",
+  "waived": [
+   "1 source font fallback classifier; actual Instrument Sans loaded",
+   "44c explicit centered reference and Taste deal place artwork below text"
+  ],
+  "adaptations": [
+   "Explicit AppLlama reference overrides previous locked design and dealt green palette",
+   "Actual app capture instead of invented live app mock",
+   "Original campaign work replaces decorative effect",
+   "Unchanged supplied Taste kit retained despite incompatible Hallmark source rules"
+  ],
+  "prompt": "Use Hallmark and design-taste-frontend with appllama.io as reference; replace rejected design",
+  "review": "Fresh hero and finish reviews; tablet gallery scale, phone campaign variety, natural brand-panel height, full phone workspace context, and specific headings resolved in recaptures",
+  "sweep": "Layout: no findings at 5 widths. Perf: 0 FAIL, 3 WARN. Privacy render: clean. Public smoke: 30 passed. Studio smoke: 27 passed. Regression tests: 112 passed. Hallmark full source: 80 FAIL solely in unchanged vendor kit; broad Taste consistency: 40 FAIL/16 WARN before final review batch, every category assessed in docs/marketing-design.md. No fabricated clean source-audit claim.",
+  "date": "2026-11-07"
+ },
+ {
+  "mode": "redesign",
+  "depth": "full",
+  "scope": "site",
+  "shape": "Product walkthrough",
+  "theme": "cobalt",
+  "axes": "light/grotesk-sans/neutral",
+  "hero": "Banner",
+  "nav": "compact edge-aligned",
+  "footer": "compact legal row",
+  "imagery": "real brief composer, brand context and example creative captures",
+  "photos": [],
+  "entry": "src/marketing/Marketing.tsx",
+  "fingerprint": [
+   "product walkthrough",
+   "banner",
+   "compact edge-aligned",
+   "legal row",
+   "real studio",
+   "native radios/source/FAQ"
+  ],
+  "sections": [
+   "Brief composer",
+   "Native-radio walkthrough",
+   "Workspace ownership",
+   "Setup questions",
+   "Open studio",
+   "Legal footer"
+  ],
+  "signature": "The actual brief composer and a selectable native-radio product walkthrough",
+  "waived": [
+   "23 neutral ink shares the control color",
+   "44c compact Banner hero",
+   "59 compact closing gap",
+   "77 compact action band",
+   "78 user requested quieter 32px section heads"
+  ],
+  "adaptations": [
+   "User explicitly rejected the colorful editorial design",
+   "Single IBM Plex Sans family and neutral controls",
+   "No decorative ASCII, keycaps or texture",
+   "Privacy uses document-appropriate audit scope"
+  ],
+  "prompt": "Everything—start over, restrained and product-focused",
+  "review": "Fresh visual review: three findings resolved; distinct default view, visible native radio controls, non-wrapping secondary action.",
+  "date": "2026-11-07"
+ },
+ {
+  "shape": "Product-led FAQ",
+  "theme": "riso",
+  "axes": "light/grotesk-heavy/chromatic-pink",
+  "hero": "Counter",
+  "nav": "edge-aligned",
+  "footer": "letter close",
+  "imagery": "real product captures from synthetic in-memory examples",
+  "photos": [],
+  "entry": "src/marketing/Marketing.tsx",
+  "fingerprint": [
+   "product-led FAQ",
+   "counter",
+   "edge-aligned",
+   "letter close",
+   "product captures",
+   "showcase/rows/band/disclosures"
+  ],
+  "sections": [
+   "Creative previews",
+   "Brand DNA",
+   "Brief/revise/export workflow",
+   "Open source",
+   "FAQ",
+   "Open studio",
+   "Footer"
+  ],
+  "signature": "The real sample creative workspace, with complete desktop previews and dedicated mobile captures",
+  "waived": [],
+  "adaptations": [
+   "Bricolage Grotesque replaces Cabinet Grotesk for OFL redistribution",
+   "Flat digital surfaces omit Riso print texture",
+   "Product-led sections precede the FAQ",
+   "Privacy uses long-document audit scope"
+  ],
+  "prompt": "Motif landing page, privacy policy, open source, new design system using Hallmark and Anti-AI Slop",
+  "sweep": "Landing: 0 FAIL, 0 REFLEX, 1 answered WARN (82 words). Privacy: 0 FAIL, 0 REFLEX, 0 WARN. Independent hero and finish review fixes resolved.",
+  "date": "2026-11-07",
+  "mode": "build"
+ }
+]

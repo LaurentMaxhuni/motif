@@ -10,6 +10,12 @@ export const staticRoutes: FastifyPluginAsync<{ root: string }> = async (
 ) => {
   const files: Record<string, [string, string]> = {
     "/": ["dist/index.html", "text/html"],
+    "/app": ["dist/app/index.html", "text/html"],
+    "/app/": ["dist/app/index.html", "text/html"],
+    "/privacy": ["dist/privacy/index.html", "text/html"],
+    "/privacy/": ["dist/privacy/index.html", "text/html"],
+    "/robots.txt": ["dist/robots.txt", "text/plain"],
+    "/sitemap.xml": ["dist/sitemap.xml", "application/xml"],
     "/favicon.svg": ["public/favicon.svg", "image/svg+xml"],
   };
   for (const [url, [file, type]] of Object.entries(files)) {
@@ -30,7 +36,7 @@ export const staticRoutes: FastifyPluginAsync<{ root: string }> = async (
   );
   app.get("/assets/:filename", async (request, reply) => {
     const path = request.url.split("?")[0];
-    const asset = /^\/assets\/[a-zA-Z0-9_-]+\.(js|css|webp|woff2?)$/.exec(path);
+    const asset = /^\/assets\/[a-zA-Z0-9_-]+\.(js|css|webp|jpg|png|woff2?)$/.exec(path);
     if (!asset || !existsSync(join(root, "dist" + path)))
       fail("Not found.", 404);
     const type =
@@ -38,9 +44,11 @@ export const staticRoutes: FastifyPluginAsync<{ root: string }> = async (
         ? "text/javascript"
         : asset[1] === "css"
           ? "text/css"
-          : asset[1] === "webp"
-            ? "image/webp"
-            : "font/" + asset[1];
+          : asset[1] === "jpg"
+            ? "image/jpeg"
+            : /^(webp|png)$/.test(asset[1])
+              ? "image/" + asset[1]
+              : "font/" + asset[1];
     return reply
       .header("Cache-Control", "no-cache")
       .type(type + "; charset=utf-8")

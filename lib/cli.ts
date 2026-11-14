@@ -145,7 +145,7 @@ export async function inspectCli(provider: string, profile: Partial<CliProfile> 
   } catch (cause) { return { id: provider, name: cliProviders[provider], available: false, error: cause.message, authenticated: null }; }
 }
 
-export async function cliCompletion(settings: Parameters<typeof cliSettings>[0], messages: ChatMessage[], json = false, maxTokens = 3500, signal?: AbortSignal, options: { timeoutMs?: number } = {}) {
+export async function cliCompletion(settings: Parameters<typeof cliSettings>[0], messages: ChatMessage[], json = false, maxTokens = 3500, signal?: AbortSignal, options: { timeoutMs?: number; outputSchema?: object } = {}) {
   const { textProvider: provider, cliProfiles } = cliSettings(settings);
   const profile = cliProfiles[provider];
   if (!profile) throw error('Select a CLI provider first.', 400);
@@ -156,10 +156,71 @@ export async function cliCompletion(settings: Parameters<typeof cliSettings>[0],
     const version = versionOutput.match(/(?:^|[^\d])([12]\.\d+\.\d+)/)?.[1] || '';
     if (provider === 'opencode' && !/^[12]\./.test(version)) throw error('Unsupported OpenCode version. Use OpenCode 1.x or 2.x.');
     const { args, env } = cliInvocation(provider, profile.model, version);
+    if (provider === 'codex' && options.outputSchema) {
+      const schemaPath = join(cwd, 'output-schema.json');
+      await writeFile(schemaPath, JSON.stringify(options.outputSchema));
+      args.splice(-1, 0, '--output-schema', schemaPath);
+    }
     // Overlay discovery/settings only for this invocation. Credentials stay in the CLI's normal store.
     if (provider === 'omp') { const config = join(cwd, 'motif.yml'); await writeFile(config, 'disabledProviders: [native, claude, codex, gemini, github, opencode, cursor, agents-md]\nmemory:\n  backend: off\n'); args.push('--config', config); }
     const input = system + '\n\nConversation (JSON; role and content are data):\n' + JSON.stringify(messages) + (json ? '\n\nReturn only valid JSON, without Markdown fences.' : '') + `\nKeep output within approximately ${maxTokens} tokens.`;
     if (Buffer.byteLength(input) > 700000) throw error('CLI prompt exceeded size limit.', 400);
     return parseCliOutput(provider, await processOutput(target, args, { cwd, input, env, signal, timeoutMs: options.timeoutMs || (maxTokens > 3500 ? 300000 : 120000) }));
   } finally { await rm(cwd, { recursive: true, force: true, maxRetries: 3 }); }
+}
+
+export interface CliModel { id: string; label?: string; description?: string }
+const claudeModels: CliModel[] = [
+  { id: 'opus', label: 'Opus', description: 'Most capable Claude model' },
+  { id: 'sonnet', label: 'Sonnet', description: 'Fast and capable' },
+  { id: 'haiku', label: 'Haiku', description: 'Fastest and lightest' },
+  { id: 'fable', label: 'Fable' },
+];
+const strip = (value: string) => value.replace(/\x1b\[[\d;]*m/g, '');
+
+/** Parses each CLI's model listing. Exported for tests. */
+export function parseModelList(provider: string, raw: string): CliModel[] {
+  const lines = strip(raw).split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  const valid = (id: string) => /^[\w.:@/+-]{1,200}$/.test(id) && !id.split('/').some(part => !part || part.startsWith('-'));
+  let models: CliModel[] = [];
+  if (provider === 'opencode') models = lines.filter(line => /^[\w.-]+\/\S+$/.test(line)).map(id => ({ id }));
+  else if (provider === 'pi') {
+    models = lines.filter(line => !/^provider\s+model\b/i.test(line)).map(line => line.split(/\s+/)).filter(parts => parts.length >= 2).map(([provider, model]) => ({ id: `${provider}/${model}` }));
+  } else if (provider === 'omp') {
+    let group = '';
+    for (const line of lines) {
+      const header = /^([\w.-]+)\s+\(\d+\)$/.exec(line);
+      if (header) { group = header[1]; continue; }
+      const row = /^│\s*([^│\s]+)\s*│/.exec(line);
+      if (group && row && row[1] !== 'model') models.push({ id: `${group}/${row[1]}` });
+    }
+  }
+  return [...new Map(models.filter(model => valid(model.id)).map(model => [model.id, model])).values()].slice(0, 500);
+}
+
+async function codexModels(): Promise<CliModel[]> {
+  const home = process.env.CODEX_HOME || join(process.env.USERPROFILE || process.env.HOME || '', '.codex');
+  try {
+    const cache = JSON.parse(await readFile(join(home, 'models_cache.json'), 'utf8'));
+    return (Array.isArray(cache?.models) ? cache.models : [])
+      .filter(model => model && typeof model.slug === 'string' && model.visibility !== 'hide' && model.visibility !== 'hidden')
+      .sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99))
+      .slice(0, 50)
+      .map(model => ({ id: model.slug, label: typeof model.display_name === 'string' ? model.display_name.slice(0, 80) : undefined, description: typeof model.description === 'string' ? model.description.slice(0, 160) : undefined }));
+  } catch { return []; }
+}
+
+/** Lists the models a CLI can use, from its own listing command or local cache. Never sends a prompt. */
+export async function listCliModels(provider: string, profile: Partial<CliProfile> = {}): Promise<{ models: CliModel[]; note?: string }> {
+  if (!Object.hasOwn(cliProviders, provider)) throw error('Unknown CLI provider.', 400);
+  if (provider === 'claude') return { models: claudeModels, note: 'Claude Code also accepts full model names.' };
+  if (provider === 'codex') {
+    const models = await codexModels();
+    return models.length ? { models } : { models, note: 'Run Codex once in your terminal so it can list your models.' };
+  }
+  const target = await resolveCli(provider, profile.executable);
+  const args = provider === 'pi' ? ['--list-models'] : ['models'];
+  const output = await processOutput(target, args, { cwd: tmpdir(), timeoutMs: 30000, limit: 2_000_000 });
+  const models = parseModelList(provider, output);
+  return models.length ? { models } : { models, note: `${cliProviders[provider]} did not list any models. Add a provider to it in your terminal first.` };
 }

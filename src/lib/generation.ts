@@ -9,7 +9,7 @@ export interface GenerationRequest {
 export interface GenerationJob {
   id: string
   status: 'running' | 'completed' | 'failed' | 'cancelled'
-  stage: 'design' | 'artwork' | 'render' | 'save'
+  stage: 'plan' | 'design' | 'artwork' | 'render' | 'review' | 'save'
   completed: number
   count: number
   weekly: boolean

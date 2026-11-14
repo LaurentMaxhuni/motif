@@ -17,6 +17,6 @@ if not exist "node_modules\cheerio" (
   pause
   exit /b 1
 )
-echo Open http://127.0.0.1:3333 in your browser. Press Ctrl+C to stop.
+echo Open http://127.0.0.1:3333/app in your browser. Press Ctrl+C to stop.
 call pnpm start
 pause

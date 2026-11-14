@@ -1,5 +1,5 @@
-import { fail, settingsInput, localRequest, completion } from "../core.ts";
-import { cliProviders, cliSettings, inspectCli, textLabel } from "../cli.ts";
+import { fail, settingsInput, localRequest, localEndpoint, completion } from "../core.ts";
+import { cliProviders, cliSettings, inspectCli, listCliModels, textLabel } from "../cli.ts";
 import type { ApiRoutes, BodyRequest } from "./types.ts";
 
 export const providersRoutes: ApiRoutes = async (
@@ -53,6 +53,13 @@ export const providersRoutes: ApiRoutes = async (
     );
     return reply.code(200).send({ providers });
   });
+  app.post<BodyRequest>("/cli/models", async (request, reply) => {
+    const config = cliSettings(request.body);
+    if (config.textProvider === "local") fail("Select a CLI provider first.");
+    return reply
+      .code(200)
+      .send(await listCliModels(config.textProvider, config.cliProfiles[config.textProvider]));
+  });
   app.post<BodyRequest>("/cli/test", async (request, reply) => {
     const body = request.body;
 
@@ -80,7 +87,8 @@ export const providersRoutes: ApiRoutes = async (
     const body = request.body;
     if (body.kind === "image")
       return reply.code(200).send({ models: await images.models(settings()) });
-    const endpoint = settings().textEndpoint;
+    // Detect from the displayed (possibly unsaved) endpoint so the model list follows the selection.
+    const endpoint = body.textEndpoint ? localEndpoint(body.textEndpoint) : settings().textEndpoint;
     const r = await localRequest(endpoint, "/models", null, 6000);
     return reply
       .code(200)

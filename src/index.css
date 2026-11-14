@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+    --workspace-font: "Segoe UI", system-ui, sans-serif;
     --sidebar: hsl(0 0% 98%);
     --sidebar-foreground: hsl(240 5.3% 26.1%);
     --sidebar-primary: hsl(240 5.9% 10%);
@@ -90,7 +91,7 @@
 }
 @layer base {
   * { @apply border-border outline-ring/50; }
-  body { @apply bg-background text-foreground; font-family: "Inter", "Segoe UI", system-ui, sans-serif; font-size: 14px; -webkit-font-smoothing: antialiased; }
+  body { @apply bg-background text-foreground; font-family: var(--workspace-font); font-size: 14px; -webkit-font-smoothing: antialiased; }
   button, [role="button"] { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
   input, textarea, select { font-size: 14px; }

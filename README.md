@@ -11,7 +11,9 @@ pnpm install --frozen-lockfile
 pnpm start
 ```
 
-Open **http://127.0.0.1:3333**. Or double-click `start-motif.cmd`. To choose another port in PowerShell: `$env:PORT=3334; pnpm start`.
+Open **http://127.0.0.1:3333** for the landing page, **http://127.0.0.1:3333/app** for the studio, or **http://127.0.0.1:3333/privacy** for the privacy policy. Or double-click `start-motif.cmd`. To choose another port in PowerShell, run `$env:PORT=3334; pnpm start`.
+
+The standalone marketing site in [site/](site/README.md) can be built and deployed separately.
 
 `pnpm start` type-checks the project and builds the React frontend before starting the local server. Node runs the server, tests, and scripts directly from TypeScript. Internet is needed to install dependencies and to use cloud-backed CLI providers. Local templates and configured local models can work offline.
 
@@ -127,6 +129,8 @@ Calendar dates alone remain local reminders. External delivery happens only thro
 
 ## Verify
 
+Public pages are rendered to static HTML during the build and hydrated by React. They remain readable without JavaScript and never load workspace data. Their visual system is documented in [docs/marketing-design.md](docs/marketing-design.md). The privacy text is a factual template for the local app, not legal advice or a policy for an independently hosted service.
+
 ```powershell
 pnpm run check
 pnpm run build
@@ -135,8 +139,17 @@ node --experimental-strip-types scripts/smoke.ts
 node --experimental-strip-types scripts/features-smoke.ts
 node --experimental-strip-types scripts/navigation-smoke.ts
 node --experimental-strip-types scripts/select-smoke.ts
+node --experimental-strip-types scripts/landing-smoke.mjs
 ```
 
 Build before running tests. Backend tests cover local AI contracts, rendering, atomic failures, persistence, backups, scheduling, network boundaries and compiled-asset allowlists. Browser suites use installed Chrome and isolated in-memory databases to verify AI creation/revision/undo/export, approvals, planning, onboarding, research, themes, connector review/delivery and responsive keyboard navigation. Set `CHROME_PATH` to override the executable. Screenshots and results are written under `output/playwright/` (Git-ignored). Model and provider responses are deterministic fixtures; actual model quality and live platform acceptance remain unverified.
 
 Node 22 may print an experimental warning for its built-in SQLite module. This is expected.
+
+## License
+
+Motif code is [MIT licensed](LICENSE). Bundled Instrument Sans and DM Mono retain their SIL Open Font Licenses in `src/marketing/assets`. Dependencies retain their respective licenses. Public product captures use synthetic sample data, not personal workspaces.
+
+### Public search configuration
+
+Set SITE_URL to the production HTTPS origin before building. This enables canonical URLs, indexable public pages, and the sitemap. Without it, local builds remain noindex and robots.txt disallows crawling. The studio remains noindex. Deploy publicly before submitting the sitemap to search engines.

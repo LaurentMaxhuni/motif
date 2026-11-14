@@ -13,7 +13,7 @@ const errors=[]
 try{
   for(const width of [390,768,1440]){
     const page=await browser.newPage({viewport:{width,height:1000}});page.on('pageerror',e=>errors.push(e.message))
-    await page.goto(base);await page.getByRole('heading',{name:'What will you create next?',exact:true}).waitFor()
+    await page.goto(base+'/app');await page.getByRole('heading',{name:'New creative',exact:true}).waitFor()
     const type=page.getByRole('combobox',{name:'Content type',exact:true})
     assert.equal(await type.evaluate(el=>el.tagName),'BUTTON','Dropdown must use the shadcn custom trigger')
     await type.click();await page.getByRole('listbox').waitFor();await page.screenshot({animations:'disabled',path:`output/playwright/dropdown-${width}.png`})

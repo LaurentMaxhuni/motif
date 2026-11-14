@@ -9,9 +9,11 @@ export function GenerationStatus({ job, pending, cancel, retry }: {
   retry: () => void
 }) {
   const stage = {
-    design: 'Preparing drafts',
+    plan: 'Developing creative concepts',
+    design: 'Designing drafts',
     artwork: `Generating artwork for draft ${job.completed + 1}`,
     render: `Rendering draft ${job.completed + 1}`,
+    review: `Reviewing and refining draft ${job.completed + 1}`,
     save: 'Saving drafts',
   }[job.stage]
 

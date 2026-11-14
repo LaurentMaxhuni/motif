@@ -5,3 +5,9 @@ output/
 .env
 graphify-out/
 dist/
+.hallmark/shots/
+.hallmark/before/
+.hallmark/before.json
+.hallmark/before.txt
+.hallmark/compare.html
+.taste-skill/consistency*/

@@ -26,7 +26,7 @@ const page=await browser.newPage({viewport:{width:1440,height:1100},acceptDownlo
 const errors=[],external=[],checks=[];page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(!r.url().startsWith(base)&&!r.url().startsWith('data:')&&!r.url().startsWith('blob:'))external.push(r.url())})
 mkdirSync('output/playwright',{recursive:true})
 try{
- await page.goto(base);await page.getByLabel('Public website',{exact:true}).fill(site);await page.getByRole('button',{name:'Analyze website',exact:true}).click()
+ await page.goto(base+'/app');await page.getByLabel('Public website',{exact:true}).fill(site);await page.getByRole('button',{name:'Analyze website',exact:true}).click()
  await page.getByRole('heading',{name:'Make this brand your own.',exact:true}).waitFor();assert.equal(store.all('brand').length,0);checks.push('no automatic save')
  assert.equal(await page.getByLabel('Business name',{exact:true}).inputValue(),'Morrow');assert.equal(await page.getByLabel('Products & services',{exact:true}).inputValue(),'Linen overshirt');assert.equal(await page.getByLabel('Brand voice',{exact:true}).inputValue(),'');checks.push('nested product group and honest voice')
  assert.match(await page.getByLabel('Your audience',{exact:true}).inputValue(),/Built for independent people/);checks.push('source-backed audience')

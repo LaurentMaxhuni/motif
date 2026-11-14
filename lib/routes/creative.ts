@@ -6,13 +6,24 @@ import {
   revise,
 } from "../core.ts";
 import { renderDesign } from "../render.ts";
+import { artworkPrompt, finalizeCreative } from "../creative/workflow.ts";
 import { brandContext } from "../brand-data.ts";
+import { briefInput, writeBrief } from "../creative/brief.ts";
+import { textReady } from "../cli.ts";
 import type { ApiRoutes, BodyRequest } from "./types.ts";
 
 export const creativeRoutes: ApiRoutes = async (
   app,
   { store, settings, images },
 ) => {
+  app.post<BodyRequest>("/brief", async (request, reply) => {
+    const body = request.body;
+    const brand = store.get("brand", text(body.brandId, 100));
+    const config = settings();
+    if (!textReady(config)) fail("Connect a writing AI in Settings to build prompts with AI.");
+    const input = briefInput(body);
+    return reply.code(200).send({ brief: await writeBrief(config, brand, input) });
+  });
   app.post<BodyRequest>("/revise", async (request, reply) => {
     const body = request.body;
     const saved = store.get("content", text(body.id, 100));
@@ -39,10 +50,16 @@ export const creativeRoutes: ApiRoutes = async (
     if (body.regenerateArtwork || !current.image)
       revised.image = await images.generate(
         generationSettings,
-        revised.design.imagePrompt,
+        artworkPrompt(generationSettings, brand, revised.design.imagePrompt),
       );
-    const item = contentInput(revised, [brand.id]);
-    item.rendered = (await renderDesign(item, brand)).rendered;
+    // Render, audit and, if needed, refine the layout before showing the preview.
+    const item = contentInput(
+      await finalizeCreative(contentInput(revised, [brand.id]), {
+        settings: generationSettings,
+        brand,
+      }),
+      [brand.id],
+    );
     if (
       store.get("content", saved.id).version !== saved.version ||
       store.get("brand", brand.id).version !== brand.version

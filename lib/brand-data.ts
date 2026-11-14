@@ -15,17 +15,17 @@ export function analysisInput(value){
     if(++nodes>30000||depth>12)invalid();
     if(item===null||typeof item==='boolean')return;
     if(typeof item==='number'){if(!Number.isFinite(item))invalid();return;}
-    if(typeof item==='string'){if(item.length>50000)invalid();return;}
+    if(typeof item==='string'){if(item.length>(/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(item)?600000:50000))invalid();return;}
     if(Array.isArray(item)){if(item.length>500)invalid();for(const child of item)check(child,depth+1);return;}
     if(typeof item!=='object')invalid();
     for(const [key,child]of Object.entries(item)){if(['__proto__','constructor','prototype'].includes(key)||key.length>100)invalid();check(child,depth+1);}
   };
-  check(value,0);const raw=JSON.stringify(value);if(raw.length>1_000_000)invalid();return JSON.parse(raw);
+  check(value,0);const raw=JSON.stringify(value);if(raw.length>4_000_000)invalid();return JSON.parse(raw);
 }
 
 export function brandContext(brand: Omit<Brand, 'id' | 'version'> & { id?: string }){
   const {id,name,website,description,product,audience,voice,colors,goal,industry,language}=brand;
   const context={id,name,website,description,product,audience,voice,colors,goal,industry,language};
-  if(brand.analysis)return {...context,research:{mode:brand.analysis.mode,findings:JSON.stringify(brand.analysis.findings||{}).slice(0,14000),evidence:(brand.analysis.evidence||[]).slice(0,18)}};
+  if(brand.analysis)return {...context,research:{mode:brand.analysis.mode,findings:JSON.stringify(brand.analysis.findings||{},(key,item)=>typeof item==='string'&&item.startsWith('data:')||['stylesheets','screenshot','palette','icons','imageUrls'].includes(key)?undefined:item).slice(0,14000),evidence:(brand.analysis.evidence||[]).slice(0,18)}};
   return context;
 }

@@ -2,6 +2,7 @@
   "name": "motif-local",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "A fully local brand and marketing studio",
   "scripts": {
@@ -10,7 +11,7 @@
     "test": "pnpm run build && node --experimental-strip-types --test test/*.test.ts",
     "check": "tsc --noEmit && tsc -p tsconfig.node.json",
     "dev:server": "node --experimental-strip-types --watch server.ts",
-    "build": "pnpm run check && vite build"
+    "build": "pnpm run check && vite build && node scripts/prerender.mjs"
   },
   "engines": {
     "node": ">=22.13"
